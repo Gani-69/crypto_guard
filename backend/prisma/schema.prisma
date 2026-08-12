@@ -1,0 +1,227 @@
+// CryptoGuard — Prisma schema
+// Dev datasource: SQLite (zero-setup). Swap provider to "postgresql" for later stages —
+// that's the point of going through Prisma instead of raw queries.
+//
+// SQLite note: enums are stored as String fields. Valid values are documented in comments
+// and enforced at the application layer. When migrating to PostgreSQL, convert to native enums.
+//
+// Design note on Shadow State isolation (Block E):
+// Wallet, Order, and Transaction all carry an `isShadow` flag. Shadow rows are a
+// SEPARATE set of records tied to the same user, never a view/filter over the real
+// data. This means "can a Shadow session touch authentic state" is a schema-level
+// question we can test directly (do writes from a Shadow session ever produce a
+// row with isShadow=false?), not just an application-logic promise.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ---------- Identity & Session ----------
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  passwordHash String
+  displayName  String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  sessions        Session[]
+  wallets         Wallet[]
+  watchlistItems  WatchlistItem[]
+  behavioralEvents BehavioralEvent[]
+}
+
+// SessionState values: NORMAL | STEP_UP | RESTRICTED | SHADOW
+
+model Session {
+  id             String   @id @default(uuid())
+  userId         String
+  user           User     @relation(fields: [userId], references: [id])
+  state          String   @default("NORMAL") // SessionState
+  tokenHash      String   @unique // hash of the issued JWT/session token, never the raw token
+  ipAddress      String?
+  userAgent      String?
+  createdAt      DateTime @default(now())
+  lastActivityAt DateTime @default(now())
+  expiresAt      DateTime
+  revokedAt      DateTime?
+
+  behavioralEvents BehavioralEvent[]
+  riskEvents       RiskEvent[]
+  policyDecisions  PolicyDecision[]
+
+  @@index([userId])
+  @@index([state])
+}
+
+// ---------- ARES: behavioral signal capture ----------
+
+model BehavioralEvent {
+  id             String   @id @default(uuid())
+  sessionId      String
+  session        Session  @relation(fields: [sessionId], references: [id])
+  userId         String
+  user           User     @relation(fields: [userId], references: [id])
+  dwellTimeMs    Float? // avg key hold duration
+  flightTimeMs   Float? // avg time between keystrokes
+  typingSpeedCpm Float? // characters per minute
+  correctionRate Float? // backspace/delete ratio
+  contextJson    String? // JSON blob: device, geo-coarse, time-of-day, navigation pattern, etc.
+  capturedAt     DateTime @default(now())
+
+  @@index([sessionId])
+  @@index([userId])
+}
+
+// ---------- ARES: risk scoring output ----------
+
+// RiskModel values: BASELINE_RULE | ML_MODEL
+
+model RiskEvent {
+  id           String   @id @default(uuid())
+  sessionId    String
+  session      Session  @relation(fields: [sessionId], references: [id])
+  modelUsed    String   // RiskModel: BASELINE_RULE | ML_MODEL
+  riskScore    Float    // 0..1, higher = riskier
+  trustScore   Float    // 0..1, higher = more trusted
+  confidence   Float    // 0..1, model's confidence in this estimate
+  signalsJson  String   // snapshot of the feature vector used, for auditability
+  decision     String   // SessionState: recommended state per Policy Engine thresholds
+  createdAt    DateTime @default(now())
+
+  policyDecisions PolicyDecision[]
+
+  @@index([sessionId])
+}
+
+// ---------- Policy Engine: state transitions ----------
+
+model PolicyDecision {
+  id          String     @id @default(uuid())
+  sessionId   String
+  session     Session    @relation(fields: [sessionId], references: [id])
+  riskEventId String?
+  riskEvent   RiskEvent? @relation(fields: [riskEventId], references: [id])
+  fromState   String     // SessionState
+  toState     String     // SessionState
+  reason      String     // human-readable justification, e.g. "riskScore 0.82 > shadowThreshold 0.75"
+  createdAt   DateTime   @default(now())
+
+  @@index([sessionId])
+}
+
+// ---------- Wallet / Trading (real + shadow, isolated by isShadow flag) ----------
+
+model Wallet {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  isShadow  Boolean  @default(false)
+  address   String   @unique // synthetic devnet address
+  chain     String   @default("devnet")
+  createdAt DateTime @default(now())
+
+  holdings     Holding[]
+  orders       Order[]
+  transactions Transaction[]
+
+  @@index([userId])
+  @@index([isShadow])
+}
+
+model Holding {
+  id        String   @id @default(uuid())
+  walletId  String
+  wallet    Wallet   @relation(fields: [walletId], references: [id])
+  coinId    String
+  coin      Coin     @relation(fields: [coinId], references: [id])
+  amount    Float    @default(0)
+  updatedAt DateTime @updatedAt
+
+  @@unique([walletId, coinId])
+}
+
+// OrderSide values: BUY | SELL
+// OrderType values: MARKET | LIMIT
+// OrderStatus values: OPEN | FILLED | CANCELLED
+
+model Order {
+  id         String   @id @default(uuid())
+  walletId   String
+  wallet     Wallet   @relation(fields: [walletId], references: [id])
+  coinId     String
+  coin       Coin     @relation(fields: [coinId], references: [id])
+  side       String   // OrderSide: BUY | SELL
+  type       String   // OrderType: MARKET | LIMIT
+  quantity   Float
+  limitPrice Float?   // null for MARKET orders
+  fillPrice  Float?
+  status     String   @default("OPEN") // OrderStatus: OPEN | FILLED | CANCELLED
+  isShadow   Boolean  @default(false) // denormalized from wallet for fast isolation checks/queries
+  createdAt  DateTime @default(now())
+  filledAt   DateTime?
+
+  transactions Transaction[]
+
+  @@index([walletId])
+  @@index([isShadow])
+}
+
+// TransactionType values: BUY | SELL | DEPOSIT | WITHDRAWAL
+
+model Transaction {
+  id        String   @id @default(uuid())
+  walletId  String
+  wallet    Wallet   @relation(fields: [walletId], references: [id])
+  orderId   String?
+  order     Order?   @relation(fields: [orderId], references: [id])
+  coinId    String
+  coin      Coin     @relation(fields: [coinId], references: [id])
+  type      String   // TransactionType: BUY | SELL | DEPOSIT | WITHDRAWAL
+  amount    Float
+  priceUsd  Float
+  isShadow  Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([walletId])
+  @@index([isShadow])
+}
+
+// ---------- Market data cache ----------
+
+model Coin {
+  id              String   @id @default(uuid())
+  symbol          String   @unique
+  name            String
+  priceUsd        Float
+  marketCapUsd    Float?
+  volume24hUsd    Float?
+  change24hPct    Float?
+  logoUrl         String?
+  rank            Int?     // market cap rank, for sorting/trending
+  isTrending      Boolean  @default(false)
+  priceHistory7d  String?  // JSON: array of { timestamp, price } for 7-day chart
+  lastUpdatedAt   DateTime @default(now())
+
+  holdings       Holding[]
+  orders         Order[]
+  transactions   Transaction[]
+  watchlistItems WatchlistItem[]
+}
+
+model WatchlistItem {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  coinId    String
+  coin      Coin     @relation(fields: [coinId], references: [id])
+  addedAt   DateTime @default(now())
+
+  @@unique([userId, coinId])
+}

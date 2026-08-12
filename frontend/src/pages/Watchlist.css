@@ -1,0 +1,141 @@
+/* ── Watchlist ── */
+
+.watchlist {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  max-width: 800px;
+}
+
+.watchlist__header h1 {
+  font-size: 1.5rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+
+.watchlist__header p {
+  font-size: 0.85rem;
+  margin-top: 4px;
+}
+
+.watchlist__loading {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.watchlist__list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.watchlist__item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 16px;
+  transition: all var(--transition-fast);
+}
+
+.watchlist__item:hover {
+  border-color: var(--border-accent);
+  transform: translateX(4px);
+}
+
+.watchlist__item-main {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex: 1;
+  text-decoration: none;
+  color: inherit;
+  min-width: 0;
+}
+
+.watchlist__icon {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.watchlist__info {
+  display: flex;
+  flex-direction: column;
+  min-width: 80px;
+}
+
+.watchlist__symbol {
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
+.watchlist__name {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.watchlist__price-area {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  min-width: 120px;
+}
+
+.watchlist__price {
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+.watchlist__change {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.watchlist__meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  min-width: 100px;
+  text-align: right;
+}
+
+.watchlist__remove {
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.watchlist__remove:hover {
+  color: var(--red-400) !important;
+}
+
+/* ── Empty ── */
+.watchlist__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 60px 20px;
+  text-align: center;
+}
+
+.watchlist__empty h3 {
+  font-size: 1.1rem;
+}
+
+@media (max-width: 640px) {
+  .watchlist__meta {
+    display: none;
+  }
+}

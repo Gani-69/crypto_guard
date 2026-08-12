@@ -1,0 +1,277 @@
+/* ── Security Dashboard CSS ── */
+
+.security {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.security__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.security__header h1 {
+  font-size: 1.5rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+
+.security__header p {
+  font-size: 0.85rem;
+  margin-top: 4px;
+}
+
+.security__refresh-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.security__spin {
+  animation: spin 1s linear infinite;
+}
+
+/* Gauges Grid */
+.security__gauges-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+
+@media (max-width: 900px) {
+  .security__gauges-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.security__gauge-card {
+  padding: 24px;
+  text-align: center;
+  min-height: 220px;
+}
+
+.security__gauge-icon-wrap {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 12px;
+}
+
+.security__gauge-label {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.security__gauge-value {
+  font-size: 1.8rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  margin-bottom: 6px;
+}
+
+.security__gauge-desc {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  line-height: 1.4;
+  max-width: 240px;
+}
+
+/* Circular Dials */
+.security__dial-container {
+  width: 96px;
+  height: 96px;
+  position: relative;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.security__dial-svg {
+  transform: rotate(-90deg);
+  width: 100%;
+  height: 100%;
+}
+
+.security__dial-bg {
+  fill: none;
+  stroke: var(--bg-elevated);
+  stroke-width: 8;
+}
+
+.security__dial-progress {
+  fill: none;
+  stroke-width: 8;
+  stroke-linecap: round;
+  transition: stroke-dashoffset var(--transition-slow);
+}
+
+.security__dial-score {
+  position: absolute;
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+}
+
+/* Main Layout */
+.security__main-layout {
+  display: grid;
+  grid-template-columns: 1fr 1.6fr;
+  gap: 20px;
+}
+
+@media (max-width: 1100px) {
+  .security__main-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+.security__section-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.security__section-title h2 {
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+/* Simulation Controls */
+.security__sim-options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.security__sim-btn {
+  width: 100%;
+  padding: 11px 14px;
+  border-radius: var(--radius-md);
+  background: var(--bg-input);
+  border: 1px solid var(--border-default);
+  color: var(--text-secondary);
+  font-size: 0.82rem;
+  font-weight: 600;
+  text-align: left;
+  transition: all var(--transition-fast);
+}
+
+.security__sim-btn:hover {
+  border-color: var(--border-hover);
+  color: var(--text-primary);
+}
+
+.security__sim-btn--active {
+  background: rgba(6, 182, 212, 0.08);
+  border-color: var(--cyan-500);
+  color: var(--cyan-400);
+}
+
+.security__info-alert {
+  display: flex;
+  gap: 10px;
+  background: rgba(6, 182, 212, 0.06);
+  border: 1px solid rgba(6, 182, 212, 0.15);
+  border-radius: var(--radius-md);
+  padding: 12px;
+  color: var(--text-secondary);
+}
+
+.security__info-alert svg {
+  color: var(--cyan-400);
+  flex-shrink: 0;
+}
+
+/* Policy Logs Timeline */
+.security__timeline {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  padding-left: 20px;
+  gap: 18px;
+}
+
+.security__timeline::before {
+  content: '';
+  position: absolute;
+  left: 5px;
+  top: 6px;
+  bottom: 6px;
+  width: 2px;
+  background: var(--border-default);
+}
+
+.security__timeline-item {
+  position: relative;
+}
+
+.security__timeline-dot {
+  position: absolute;
+  left: -20px;
+  top: 6px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--bg-card);
+  border: 2px solid var(--purple-400);
+  box-shadow: 0 0 8px rgba(168, 85, 247, 0.3);
+}
+
+.security__timeline-content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.security__timeline-title {
+  font-size: 0.8rem;
+}
+
+.security__timeline-reason {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+.security__timeline-time {
+  font-size: 0.65rem;
+  color: var(--text-muted);
+}
+
+/* Charts side */
+.security__chart-container {
+  min-height: 360px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.security__chart-empty {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  padding: 40px;
+}
+
+/* Helpers */
+.mb-md { margin-bottom: 12px; }
+.mb-lg { margin-bottom: 18px; }
+.mt-md { margin-top: 12px; }
