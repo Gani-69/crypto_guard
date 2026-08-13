@@ -7,7 +7,7 @@
   "scripts": {
     "dev": "tsx watch src/server.ts",
     "build": "tsc -p tsconfig.json",
-    "start": "npx prisma db push && node dist/db/seed.js && node dist/server.js",
+    "start": "DATABASE_URL=file:./dev.db npx prisma db push && DATABASE_URL=file:./dev.db node dist/db/seed.js && DATABASE_URL=file:./dev.db node dist/server.js",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:studio": "prisma studio",
