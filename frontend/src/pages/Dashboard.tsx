@@ -14,35 +14,59 @@ import { formatUsd, formatPct } from '../types';
 import './Dashboard.css';
 
 export default function Dashboard() {
-  const { stats } = useMarketStats();
+  const { stats, loading: statsLoading } = useMarketStats();
   const { coins: trendingCoins, loading: trendingLoading } = useCoins({ trending: true });
-  const { coins: topCoins } = useCoins({ sort: 'rank', order: 'asc', limit: 5 } as any);
+  const { coins: topCoins, loading: topLoading } = useCoins({ sort: 'rank', order: 'asc', limit: 5 } as any);
 
   const statCards = [
     {
       label: 'Total Market Cap',
-      value: stats ? formatUsd(stats.totalMarketCap, true) : '—',
+      value: statsLoading ? (
+        <span className="skeleton" style={{ display: 'inline-block', height: 20, width: 90, marginTop: 4 }} />
+      ) : stats ? (
+        formatUsd(stats.totalMarketCap, true)
+      ) : (
+        '—'
+      ),
       icon: DollarSign,
       color: 'var(--cyan-400)',
       bg: 'rgba(6, 182, 212, 0.1)',
     },
     {
       label: '24h Volume',
-      value: stats ? formatUsd(stats.totalVolume24h, true) : '—',
+      value: statsLoading ? (
+        <span className="skeleton" style={{ display: 'inline-block', height: 20, width: 90, marginTop: 4 }} />
+      ) : stats ? (
+        formatUsd(stats.totalVolume24h, true)
+      ) : (
+        '—'
+      ),
       icon: BarChart3,
       color: 'var(--blue-400)',
       bg: 'rgba(96, 165, 250, 0.1)',
     },
     {
       label: 'Avg 24h Change',
-      value: stats ? formatPct(stats.avgChange24h) : '—',
+      value: statsLoading ? (
+        <span className="skeleton" style={{ display: 'inline-block', height: 20, width: 65, marginTop: 4 }} />
+      ) : stats ? (
+        formatPct(stats.avgChange24h)
+      ) : (
+        '—'
+      ),
       icon: Activity,
       color: stats && stats.avgChange24h >= 0 ? 'var(--green-400)' : 'var(--red-400)',
       bg: stats && stats.avgChange24h >= 0 ? 'rgba(34, 197, 94, 0.1)' : 'rgba(239, 68, 68, 0.1)',
     },
     {
       label: 'Gainers / Losers',
-      value: stats ? `${stats.gainers} / ${stats.losers}` : '—',
+      value: statsLoading ? (
+        <span className="skeleton" style={{ display: 'inline-block', height: 20, width: 60, marginTop: 4 }} />
+      ) : stats ? (
+        `${stats.gainers} / ${stats.losers}`
+      ) : (
+        '—'
+      ),
       icon: TrendingUp,
       color: 'var(--green-400)',
       bg: 'rgba(34, 197, 94, 0.1)',
@@ -123,29 +147,45 @@ export default function Dashboard() {
               </tr>
             </thead>
             <tbody>
-              {topCoins.map((coin) => {
-                const isUp = (coin.change24hPct ?? 0) >= 0;
-                return (
-                  <tr key={coin.id}>
-                    <td className="text-muted">{coin.rank}</td>
-                    <td>
-                      <Link to={`/coin/${coin.symbol}`} className="market-table__coin">
-                        <span className="market-table__symbol">{coin.symbol}</span>
-                        <span className="market-table__name">{coin.name}</span>
-                      </Link>
-                    </td>
-                    <td className="font-semibold">{formatUsd(coin.priceUsd)}</td>
-                    <td>
-                      <span className={`market-table__change ${isUp ? 'text-green' : 'text-red'}`}>
-                        {isUp ? <TrendingUp size={13} /> : <TrendingDown size={13} />}
-                        {formatPct(coin.change24hPct)}
-                      </span>
-                    </td>
-                    <td className="text-secondary">{formatUsd(coin.marketCapUsd ?? 0, true)}</td>
-                    <td className="text-secondary">{formatUsd(coin.volume24hUsd ?? 0, true)}</td>
-                  </tr>
-                );
-              })}
+              {topLoading
+                ? Array.from({ length: 5 }).map((_, i) => (
+                    <tr key={i}>
+                      <td><div className="skeleton" style={{ height: 16, width: 16 }} /></td>
+                      <td>
+                        <div className="flex items-center gap-sm">
+                          <div className="skeleton" style={{ height: 20, width: 40, borderRadius: 4 }} />
+                          <div className="skeleton" style={{ height: 16, width: 80 }} />
+                        </div>
+                      </td>
+                      <td><div className="skeleton" style={{ height: 16, width: 70 }} /></td>
+                      <td><div className="skeleton" style={{ height: 16, width: 50 }} /></td>
+                      <td><div className="skeleton" style={{ height: 16, width: 80 }} /></td>
+                      <td><div className="skeleton" style={{ height: 16, width: 80 }} /></td>
+                    </tr>
+                  ))
+                : topCoins.map((coin) => {
+                    const isUp = (coin.change24hPct ?? 0) >= 0;
+                    return (
+                      <tr key={coin.id}>
+                        <td className="text-muted">{coin.rank}</td>
+                        <td>
+                          <Link to={`/coin/${coin.symbol}`} className="market-table__coin">
+                            <span className="market-table__symbol">{coin.symbol}</span>
+                            <span className="market-table__name">{coin.name}</span>
+                          </Link>
+                        </td>
+                        <td className="font-semibold">{formatUsd(coin.priceUsd)}</td>
+                        <td>
+                          <span className={`market-table__change ${isUp ? 'text-green' : 'text-red'}`}>
+                            {isUp ? <TrendingUp size={13} /> : <TrendingDown size={13} />}
+                            {formatPct(coin.change24hPct)}
+                          </span>
+                        </td>
+                        <td className="text-secondary">{formatUsd(coin.marketCapUsd ?? 0, true)}</td>
+                        <td className="text-secondary">{formatUsd(coin.volume24hUsd ?? 0, true)}</td>
+                      </tr>
+                    );
+                  })}
             </tbody>
           </table>
         </div>

@@ -281,20 +281,23 @@ export default function Security() {
               </div>
             ) : (
               <div className="security__timeline">
-                {riskData?.policyLogs.map((log) => (
-                  <div key={log.id} className="security__timeline-item">
-                    <div className="security__timeline-dot" />
-                    <div className="security__timeline-content">
-                      <span className="security__timeline-title">
-                        Transitioned <strong>{log.fromState}</strong> &rarr; <strong>{log.toState}</strong>
-                      </span>
-                      <p className="security__timeline-reason">{log.reason}</p>
-                      <span className="security__timeline-time">
-                        {new Date(log.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
-                      </span>
+                {riskData?.policyLogs.map((log) => {
+                  const stateColor = stateColors[log.toState] || 'var(--cyan-400)';
+                  return (
+                    <div key={log.id} className="security__timeline-item">
+                      <div className="security__timeline-dot" style={{ borderColor: stateColor, boxShadow: `0 0 8px ${stateColor}` }} />
+                      <div className="security__timeline-content">
+                        <span className="security__timeline-title">
+                          Transitioned <strong>{log.fromState}</strong> &rarr; <strong style={{ color: stateColor }}>{log.toState}</strong>
+                        </span>
+                        <p className="security__timeline-reason">{log.reason}</p>
+                        <span className="security__timeline-time">
+                          {new Date(log.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                        </span>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>

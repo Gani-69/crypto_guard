@@ -3,7 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { useCoins, useOrders, useWallet } from '../hooks/useMarketData';
 import { formatUsd } from '../types';
 import * as api from '../api/client';
-import { AlertCircle, X, ShieldAlert } from 'lucide-react';
+import { AlertCircle, X } from 'lucide-react';
 import './Trading.css';
 
 export default function Trading() {
@@ -107,12 +107,7 @@ export default function Trading() {
         <p className="text-secondary">Execute MARKET and LIMIT orders without real capital risks</p>
       </div>
 
-      {walletData?.wallet?.isShadow && (
-        <div className="trading__shadow-warning">
-          <ShieldAlert size={18} />
-          <span><strong>Decoy Mode Active:</strong> Execution is isolated inside the Shadow state. Authentic portfolio is secure.</span>
-        </div>
-      )}
+
 
       <div className="trading__grid">
         {/* ── Order Form ── */}
@@ -260,7 +255,36 @@ export default function Trading() {
         <div className="trading__history card">
           <h2>Order History</h2>
           {ordersLoading && orders.length === 0 ? (
-            <div className="skeleton" style={{ height: 250, borderRadius: 12, marginTop: 12 }} />
+            <div className="trading__table-wrap" style={{ marginTop: 12 }}>
+              <table className="trading-table">
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Type</th>
+                    <th>Side</th>
+                    <th>Asset</th>
+                    <th style={{ textAlign: 'right' }}>Qty</th>
+                    <th style={{ textAlign: 'right' }}>Price</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {Array.from({ length: 4 }).map((_, i) => (
+                    <tr key={i}>
+                      <td><div className="skeleton" style={{ height: 14, width: 70 }} /></td>
+                      <td><div className="skeleton" style={{ height: 18, width: 48, borderRadius: 4 }} /></td>
+                      <td><div className="skeleton" style={{ height: 18, width: 38, borderRadius: 4 }} /></td>
+                      <td><div className="skeleton" style={{ height: 16, width: 32 }} /></td>
+                      <td style={{ textAlign: 'right' }}><div className="skeleton" style={{ height: 16, width: 60, marginLeft: 'auto' }} /></td>
+                      <td style={{ textAlign: 'right' }}><div className="skeleton" style={{ height: 16, width: 70, marginLeft: 'auto' }} /></td>
+                      <td><div className="skeleton" style={{ height: 18, width: 56, borderRadius: 99 }} /></td>
+                      <td><div className="skeleton" style={{ height: 16, width: 16 }} /></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           ) : orders.length === 0 ? (
             <div className="trading__empty">
               <p className="text-muted">No orders submitted yet.</p>

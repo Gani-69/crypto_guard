@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useWallet, useTransactions } from '../hooks/useMarketData';
 import { formatUsd } from '../types';
-import { Copy, Check, Wallet as WalletIcon, ArrowUpRight, ArrowDownLeft, ShieldAlert } from 'lucide-react';
+import { Copy, Check, Wallet as WalletIcon, ArrowUpRight, ArrowDownLeft } from 'lucide-react';
 import './Wallet.css';
 
 export default function Wallet() {
@@ -22,8 +22,56 @@ export default function Wallet() {
   if (isLoading && !walletData) {
     return (
       <div className="wallet fade-in">
-        <div className="skeleton" style={{ height: 180, borderRadius: 16 }} />
-        <div className="skeleton" style={{ height: 400, borderRadius: 16, marginTop: 24 }} />
+        {/* Header skeleton */}
+        <div className="wallet__header" style={{ marginBottom: 12 }}>
+          <div className="skeleton" style={{ height: 28, width: 220 }} />
+          <div className="skeleton" style={{ height: 16, width: 280, marginTop: 8 }} />
+        </div>
+
+        {/* Portfolio Balance Card skeleton */}
+        <div className="skeleton" style={{ height: 140, borderRadius: 16, marginBottom: 24 }} />
+
+        {/* Grid skeleton */}
+        <div className="wallet__grid">
+          {/* Holdings skeleton */}
+          <div className="card" style={{ padding: 24 }}>
+            <div className="flex items-center gap-sm" style={{ marginBottom: 20 }}>
+              <div className="skeleton" style={{ height: 20, width: 20 }} />
+              <div className="skeleton" style={{ height: 20, width: 140 }} />
+            </div>
+            <div className="flex flex-col gap-md">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="flex justify-between items-center" style={{ paddingBottom: 12, borderBottom: '1px solid var(--border-default)' }}>
+                  <div className="flex-col gap-xs">
+                    <div className="skeleton" style={{ height: 16, width: 48 }} />
+                    <div className="skeleton" style={{ height: 12, width: 80 }} />
+                  </div>
+                  <div className="skeleton" style={{ height: 16, width: 60 }} />
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Transactions skeleton */}
+          <div className="card" style={{ padding: 24 }}>
+            <div className="flex items-center gap-sm" style={{ marginBottom: 20 }}>
+              <div className="skeleton" style={{ height: 20, width: 20 }} />
+              <div className="skeleton" style={{ height: 20, width: 140 }} />
+            </div>
+            <div className="flex flex-col gap-md">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="flex items-center gap-sm" style={{ paddingBottom: 12, borderBottom: '1px solid var(--border-default)' }}>
+                  <div className="skeleton" style={{ height: 32, width: 32, borderRadius: 6 }} />
+                  <div className="flex-col gap-xs" style={{ flex: 1 }}>
+                    <div className="skeleton" style={{ height: 14, width: 100 }} />
+                    <div className="skeleton" style={{ height: 10, width: 60 }} />
+                  </div>
+                  <div className="skeleton" style={{ height: 16, width: 60 }} />
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
@@ -39,12 +87,7 @@ export default function Wallet() {
         <p className="text-secondary">Simulated non-custodial devnet wallet</p>
       </div>
 
-      {wallet?.isShadow && (
-        <div className="wallet__shadow-warning">
-          <ShieldAlert size={18} />
-          <span><strong>Coercion State Detected:</strong> You are currently viewing isolated decoy balances.</span>
-        </div>
-      )}
+
 
       {/* ── Portfolio Balance Card ── */}
       <div className="wallet__balance-card card-glass">

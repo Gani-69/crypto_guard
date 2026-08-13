@@ -83,19 +83,23 @@
 
 /* ── Chart ── */
 .coin-detail__chart {
-  padding: 24px;
+  padding: 24px 28px;
+  background: rgba(21, 28, 47, 0.4);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-xl);
 }
 
 .coin-detail__chart-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 16px;
+  margin-bottom: 20px;
 }
 
 .coin-detail__chart-header h3 {
-  font-size: 1rem;
-  font-weight: 600;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: white;
 }
 
 .coin-detail__chart-header span {
@@ -112,14 +116,24 @@
 .coin-detail__stats {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 12px;
+  gap: 16px;
 }
 
 .coin-detail__stat {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 16px;
+  gap: 14px;
+  padding: 20px 24px;
+  background: rgba(21, 28, 47, 0.45);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-xl);
+  transition: all var(--transition-base);
+}
+
+.coin-detail__stat:hover {
+  border-color: rgba(6, 182, 212, 0.25);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45), 0 0 15px rgba(6, 182, 212, 0.05);
 }
 
 .coin-detail__stat-label {
@@ -127,31 +141,39 @@
   font-size: 0.72rem;
   color: var(--text-muted);
   text-transform: uppercase;
-  letter-spacing: 0.06em;
-  font-weight: 600;
+  letter-spacing: 0.08em;
+  font-weight: 700;
 }
 
 .coin-detail__stat-value {
   display: block;
-  font-size: 1.05rem;
-  font-weight: 700;
-  margin-top: 2px;
+  font-size: 1.15rem;
+  font-weight: 800;
+  margin-top: 4px;
+  color: white;
 }
 
 /* ── Trade placeholder ── */
 .coin-detail__trade {
-  padding: 24px;
+  padding: 24px 28px;
+  background: rgba(21, 28, 47, 0.55);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-xl);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
 }
 
 .coin-detail__trade h3 {
-  font-size: 1.05rem;
-  font-weight: 700;
+  font-size: 1.1rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: white;
 }
 
 .coin-detail__trade-buttons {
   display: flex;
-  gap: 12px;
-  margin-top: 16px;
+  gap: 16px;
+  margin-top: 20px;
 }
 
 .coin-detail__trade-buttons .btn {

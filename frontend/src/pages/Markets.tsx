@@ -104,16 +104,19 @@ export default function Markets() {
 
       {/* ── Content ── */}
       {loading ? (
-        <div className="markets__loading">
+        <div className={viewMode === 'grid' ? 'markets__grid' : 'markets__loading'}>
           {Array.from({ length: 6 }).map((_, i) => (
             <div key={i} className="skeleton" style={{ height: viewMode === 'grid' ? 160 : 56, borderRadius: 12 }} />
           ))}
         </div>
       ) : coins.length === 0 ? (
         <div className="markets__empty card">
-          <Search size={40} className="text-muted" />
+          <Search size={40} className="text-muted" style={{ marginBottom: 4 }} />
           <h3>No coins found</h3>
-          <p className="text-muted">Try a different search term</p>
+          <p className="text-secondary" style={{ marginBottom: 12 }}>Try a different search term or clear the filter</p>
+          <button className="btn btn-secondary" onClick={() => setSearch('')}>
+            Clear Search
+          </button>
         </div>
       ) : viewMode === 'grid' ? (
         <div className="markets__grid">

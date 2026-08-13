@@ -32,9 +32,40 @@ export default function CoinDetail() {
 
   if (loading) {
     return (
-      <div className="coin-detail fade-in">
-        <div className="skeleton" style={{ height: 40, width: 200 }} />
-        <div className="skeleton" style={{ height: 400, borderRadius: 16, marginTop: 20 }} />
+      <div className="coin-detail fade-in" style={{ padding: '8px 0' }}>
+        {/* Back navigation link skeleton */}
+        <div className="skeleton" style={{ height: 18, width: 130, marginBottom: 20 }} />
+
+        {/* Header skeleton */}
+        <div className="flex justify-between items-center gap-md" style={{ marginBottom: 20, flexWrap: 'wrap' }}>
+          <div className="flex items-center gap-sm">
+            <div className="skeleton" style={{ height: 52, width: 52, borderRadius: 12 }} />
+            <div className="flex-col gap-xs">
+              <div className="skeleton" style={{ height: 28, width: 180 }} />
+              <div className="skeleton" style={{ height: 16, width: 80 }} />
+            </div>
+          </div>
+          <div className="skeleton" style={{ height: 38, width: 160, borderRadius: 10 }} />
+        </div>
+
+        {/* Price row skeleton */}
+        <div className="flex items-baseline gap-sm" style={{ marginBottom: 24 }}>
+          <div className="skeleton" style={{ height: 44, width: 220 }} />
+          <div className="skeleton" style={{ height: 24, width: 80 }} />
+        </div>
+
+        {/* Chart skeleton */}
+        <div className="skeleton" style={{ height: 340, borderRadius: 16, marginBottom: 24 }} />
+
+        {/* Stats row skeleton */}
+        <div className="coin-detail__stats" style={{ marginBottom: 24 }}>
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="skeleton" style={{ height: 76, borderRadius: 12 }} />
+          ))}
+        </div>
+
+        {/* Trade terminal skeleton */}
+        <div className="skeleton" style={{ height: 150, borderRadius: 16 }} />
       </div>
     );
   }

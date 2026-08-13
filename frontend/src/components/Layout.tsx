@@ -155,6 +155,10 @@ export default function Layout() {
             <div className="sidebar__status-dot" style={{ background: stateDotColor, boxShadow: `0 0 8px ${stateDotColor}` }} />
             <span>{stateLabelText}</span>
           </div>
+          <div className="sidebar__telemetry" title="ARES Continuous Biometric Telemetry Active">
+            <div className="telemetry-pulse-dot" />
+            <span>ARES Telemetry Active</span>
+          </div>
         </div>
       </aside>
 
