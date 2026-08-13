@@ -1,3 +1,4 @@
+import path from "path";
 import express, { Express, NextFunction, Request, Response } from "express";
 import cors from "cors";
 import helmet from "helmet";
@@ -33,6 +34,23 @@ export function createApp(): Express {
   app.use("/api/wallet", walletRouter);
   app.use("/api/trading", tradingRouter);
   app.use("/api/ares", aresRouter);
+
+  // Serve static assets from frontend build in production
+  const frontendDistPath = path.join(__dirname, "../../frontend/dist");
+  app.use(express.static(frontendDistPath));
+
+  // Fallback to React index.html for client-side routing
+  app.get("*", (req: Request, res: Response, next: NextFunction) => {
+    if (!req.path.startsWith("/api")) {
+      res.sendFile(path.join(frontendDistPath, "index.html"), (err) => {
+        if (err) {
+          next();
+        }
+      });
+    } else {
+      next();
+    }
+  });
 
   // 404
   app.use((req: Request, res: Response) => {
