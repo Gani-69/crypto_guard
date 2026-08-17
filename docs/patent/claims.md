@@ -1,5 +1,8 @@
 # Patent Technical Disclosure: Draft Claims
 
+> [!CAUTION]
+> **Draft technical disclosure only. Requires professional patentability opinion and review by a registered patent attorney before any filing.**
+
 This document provides a draft of independent and dependent claims to support patent applications.
 
 ---

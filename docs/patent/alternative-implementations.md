@@ -1,5 +1,8 @@
 # Patent Technical Disclosure: Alternative Implementations
 
+> [!CAUTION]
+> **Draft technical disclosure only. Requires professional patentability opinion and review by a registered patent attorney before any filing.**
+
 This document describes alternative architectures, telemetry signals, and database isolation implementations to cover broad variations in patent filings.
 
 ---

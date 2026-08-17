@@ -1,5 +1,8 @@
 # Patent Technical Disclosure: Technical Problem & Prior-Art Gaps
 
+> [!CAUTION]
+> **Draft technical disclosure only. Requires professional patentability opinion and review by a registered patent attorney before any filing.**
+
 This document identifies the technical problem solved by **CryptoGuard** and the specific limitations (gaps) in prior-art technologies.
 
 ---

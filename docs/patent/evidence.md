@@ -1,5 +1,8 @@
 # Patent Technical Disclosure: Technical Evidence of Efficacy
 
+> [!CAUTION]
+> **Draft technical disclosure only. Requires professional patentability opinion and review by a registered patent attorney before any filing.**
+
 This document compiles quantitative and formal evidence demonstrating the technical feasibility, safety, and efficacy of the **CryptoGuard** continuous biometric authentication and decoy routing architecture.
 
 This evidence serves directly as technical support for patent applications (e.g., proving "unexpected results," technical utility, and non-obvious reduction to practice).
