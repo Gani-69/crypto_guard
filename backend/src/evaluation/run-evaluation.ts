@@ -16,7 +16,7 @@ const SAMPLES_PER_CATEGORY = 200;
 // ── Generate ─────────────────────────────────────────────────────────
 console.log("=".repeat(76));
 console.log("  BLOCK G — ARES MODEL EVALUATION & BENCHMARK");
-console.log("  Baseline Rule Model vs. ML Anomaly Classifier");
+console.log("  Baseline Rule Model vs. ML Anomaly Classifier vs. Neural-Net Scorer");
 console.log("=".repeat(76));
 console.log();
 
@@ -60,6 +60,8 @@ function printMetrics(m: ModelMetrics) {
 printMetrics(results.baseline);
 console.log();
 printMetrics(results.ml);
+console.log();
+printMetrics(results.neural);
 
 // ── Comparison table ─────────────────────────────────────────────────
 console.log(`\n${"─".repeat(76)}`);
@@ -75,27 +77,25 @@ const metrics: [string, (m: ModelMetrics) => string][] = [
   ["False Negative Rate", (m) => pct(m.falseNegativeRate)],
 ];
 
-console.log(`  ${"Metric".padEnd(24)} ${"Baseline Rule".padStart(14)} ${"ML Classifier".padStart(14)}   Winner`);
-console.log(`  ${"─".repeat(70)}`);
+console.log(`  ${"Metric".padEnd(24)} ${"Baseline Rule".padStart(14)} ${"ML Classifier".padStart(14)} ${"Neural-Net".padStart(14)}   Winner`);
+console.log(`  ${"─".repeat(84)}`);
 
 for (const [label, extractor] of metrics) {
   const blVal = extractor(results.baseline);
   const mlVal = extractor(results.ml);
+  const nnVal = extractor(results.neural);
 
   // Determine winner (higher is better for accuracy/precision/recall/F1, lower for FPR/FNR)
   const isLowerBetter = label.includes("Rate");
-  let winner = "";
-  const blNum = parseFloat(blVal);
-  const mlNum = parseFloat(mlVal);
-  if (Math.abs(blNum - mlNum) < 0.01) {
-    winner = "≈ Tied";
-  } else if (isLowerBetter) {
-    winner = blNum < mlNum ? "← Baseline" : "ML →";
-  } else {
-    winner = blNum > mlNum ? "← Baseline" : "ML →";
-  }
+  const vals = [
+    { name: "Baseline", num: parseFloat(blVal) },
+    { name: "ML", num: parseFloat(mlVal) },
+    { name: "Neural", num: parseFloat(nnVal) },
+  ];
+  vals.sort((a, b) => isLowerBetter ? a.num - b.num : b.num - a.num);
+  const winner = Math.abs(vals[0].num - vals[1].num) < 0.01 ? "≈ Tied" : `← ${vals[0].name}`;
 
-  console.log(`  ${label.padEnd(24)} ${blVal.padStart(14)} ${mlVal.padStart(14)}   ${winner}`);
+  console.log(`  ${label.padEnd(24)} ${blVal.padStart(14)} ${mlVal.padStart(14)} ${nnVal.padStart(14)}   ${winner}`);
 }
 
 // ── Per-category breakdown ───────────────────────────────────────────
@@ -109,6 +109,7 @@ for (const cat of results.categoryBreakdowns) {
 
   console.log(`    Baseline Rule:  ${formatDecisionDist(cat.baselineDecisions, cat.totalSamples)}`);
   console.log(`    ML Classifier:  ${formatDecisionDist(cat.mlDecisions, cat.totalSamples)}`);
+  console.log(`    Neural-Net:     ${formatDecisionDist(cat.neuralDecisions, cat.totalSamples)}`);
 }
 
 function formatDecisionDist(dist: Record<string, number>, total: number): string {
@@ -121,7 +122,16 @@ function formatDecisionDist(dist: Record<string, number>, total: number): string
 
 // ── Save results ─────────────────────────────────────────────────────
 // Strip individual predictions for the summary file (too large)
-const summaryResults = { ...results };
+const summaryResults = {
+  ...results,
+  extendedEvaluations: {
+    rocAnalysis: "docs/roc-results.json",
+    statisticalSignificance: "docs/statistical-results.json",
+    performanceBenchmarks: "docs/perf-results.json",
+    systematicSecurityTests: "docs/security-results.json",
+    adversarialRobustness: "docs/adversarial-results.json"
+  }
+};
 delete (summaryResults as any).samplePredictions;
 
 // docs/ is at the project root: backend/src/evaluation/../../.. = project root

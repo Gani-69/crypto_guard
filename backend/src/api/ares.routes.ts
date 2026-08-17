@@ -12,6 +12,26 @@ router.post("/signal", requireAuth as any, async (req: AuthenticatedRequest, res
     const session = req.session!;
     const user = req.user!;
 
+    // Input validation helper
+    const isValidNumber = (val: any) => {
+      if (val === undefined || val === null) return true;
+      const num = Number(val);
+      return !isNaN(num) && isFinite(num) && typeof val !== "boolean";
+    };
+
+    if (
+      !isValidNumber(dwellTimeMs) ||
+      !isValidNumber(flightTimeMs) ||
+      !isValidNumber(typingSpeedCpm) ||
+      !isValidNumber(correctionRate)
+    ) {
+      res.status(400).json({
+        error: "invalid_input",
+        message: "Signal values (dwellTimeMs, flightTimeMs, typingSpeedCpm, correctionRate) must be valid numbers.",
+      });
+      return;
+    }
+
     // Compile contextual signals
     const userAgent = req.headers["user-agent"] || undefined;
     const ipAddress = (req.ip || req.headers["x-forwarded-for"] as string) || undefined;
@@ -38,6 +58,7 @@ router.post("/signal", requireAuth as any, async (req: AuthenticatedRequest, res
       models: {
         baseline: results.baselineResult,
         ml: results.mlResult,
+        neural: results.neuralResult,
       },
     });
   } catch (err) {

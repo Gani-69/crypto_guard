@@ -10,7 +10,7 @@ Locked as of Block A (Aug 12, 2026). Use these terms consistently across code, d
 | **Shadow State** | An isolated demo environment (its own wallet, balances, orders, transaction history) shown to the user when the Policy Engine detects a high-risk / coercion-consistent pattern. Structurally separate rows in the DB (`isShadow=true`), not a filtered view of real data. |
 | **Baseline Rule Model** | Deterministic, threshold-based ARES scorer (Block D). Interpretable, low-latency, the control condition for the ML comparison. |
 | **ML Model** | Learned ARES scorer trained on synthetic behavioral data (Block D). Compared against the Baseline on accuracy/precision/recall/F1/FPR/FNR (Block G). |
-| **AI-assisted Model** | Deferred / stretch goal only. Not required for the Aug 30 deliverable. |
+| **AI-assisted Model (Neural-Net)** | Feedforward neural network (6→16→8→1, ReLU/Sigmoid) pre-trained offline on synthetic behavioral data (seeds 1000–1099, disjoint from evaluation seeds). Pure-TypeScript inference with weights baked as constants. Third ARES scorer alongside Baseline Rule and ML. |
 | **Platform Adapter** | Thin interface wrapping the external market-data provider, so swapping providers later doesn't ripple through the dashboard/trading code. |
 
 ## Session state machine (locked)

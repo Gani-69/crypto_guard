@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-08-12T16:41:31.194Z",
+  "timestamp": "2026-08-17T09:22:37.797Z",
   "datasetSize": 1000,
   "samplesPerCategory": 200,
   "categories": [
@@ -41,6 +41,22 @@
     "falsePositiveRate": 0.0925,
     "falseNegativeRate": 0
   },
+  "neural": {
+    "modelName": "Neural-Net Scorer",
+    "totalSamples": 1000,
+    "confusion": {
+      "tp": 600,
+      "tn": 400,
+      "fp": 0,
+      "fn": 0
+    },
+    "accuracy": 1,
+    "precision": 1,
+    "recall": 1,
+    "f1Score": 1,
+    "falsePositiveRate": 0,
+    "falseNegativeRate": 0
+  },
   "categoryBreakdowns": [
     {
       "category": "LEGITIMATE",
@@ -49,6 +65,9 @@
         "NORMAL": 200
       },
       "mlDecisions": {
+        "NORMAL": 200
+      },
+      "neuralDecisions": {
         "NORMAL": 200
       }
     },
@@ -63,6 +82,9 @@
         "STEP_UP": 30,
         "RESTRICTED": 6,
         "SHADOW": 1
+      },
+      "neuralDecisions": {
+        "NORMAL": 200
       }
     },
     {
@@ -76,6 +98,9 @@
       },
       "mlDecisions": {
         "SHADOW": 200
+      },
+      "neuralDecisions": {
+        "SHADOW": 200
       }
     },
     {
@@ -85,6 +110,9 @@
         "RESTRICTED": 200
       },
       "mlDecisions": {
+        "SHADOW": 200
+      },
+      "neuralDecisions": {
         "SHADOW": 200
       }
     },
@@ -97,7 +125,17 @@
       },
       "mlDecisions": {
         "SHADOW": 200
+      },
+      "neuralDecisions": {
+        "SHADOW": 200
       }
     }
-  ]
+  ],
+  "extendedEvaluations": {
+    "rocAnalysis": "docs/roc-results.json",
+    "statisticalSignificance": "docs/statistical-results.json",
+    "performanceBenchmarks": "docs/perf-results.json",
+    "systematicSecurityTests": "docs/security-results.json",
+    "adversarialRobustness": "docs/adversarial-results.json"
+  }
 }

@@ -20,6 +20,7 @@
 import {
   evaluateBaselineRule,
   evaluateMLModel,
+  evaluateNeuralModel,
   type ScorerResult,
 } from "../services/ares.service";
 import type { LabeledSample, GroundTruthLabel } from "./synthetic-dataset";
@@ -50,6 +51,7 @@ export interface CategoryBreakdown {
   totalSamples: number;
   baselineDecisions: Record<string, number>;
   mlDecisions: Record<string, number>;
+  neuralDecisions: Record<string, number>;
 }
 
 export interface EvaluationResult {
@@ -59,6 +61,7 @@ export interface EvaluationResult {
   categories: string[];
   baseline: ModelMetrics;
   ml: ModelMetrics;
+  neural: ModelMetrics;
   categoryBreakdowns: CategoryBreakdown[];
   samplePredictions: SamplePrediction[];
 }
@@ -73,6 +76,9 @@ export interface SamplePrediction {
   mlDecision: string;
   mlRiskScore: number;
   mlPredictedLabel: GroundTruthLabel;
+  neuralDecision: string;
+  neuralRiskScore: number;
+  neuralPredictedLabel: GroundTruthLabel;
 }
 
 // ── Evaluation engine ────────────────────────────────────────────────
@@ -126,23 +132,28 @@ export function evaluateModels(samples: LabeledSample[]): EvaluationResult {
 
   const baselinePreds: { groundTruth: GroundTruthLabel; predicted: GroundTruthLabel }[] = [];
   const mlPreds: { groundTruth: GroundTruthLabel; predicted: GroundTruthLabel }[] = [];
+  const neuralPreds: { groundTruth: GroundTruthLabel; predicted: GroundTruthLabel }[] = [];
 
   // Per-category tracking
   const categoryMap = new Map<string, {
     total: number;
     baselineDecisions: Record<string, number>;
     mlDecisions: Record<string, number>;
+    neuralDecisions: Record<string, number>;
   }>();
 
   for (const sample of samples) {
     const baselineResult: ScorerResult = evaluateBaselineRule(sample.signal);
     const mlResult: ScorerResult = evaluateMLModel(sample.signal);
+    const neuralResult: ScorerResult = evaluateNeuralModel(sample.signal);
 
     const blLabel = decisionToLabel(baselineResult.decision);
     const mlLabel = decisionToLabel(mlResult.decision);
+    const neuralLabel = decisionToLabel(neuralResult.decision);
 
     baselinePreds.push({ groundTruth: sample.label, predicted: blLabel });
     mlPreds.push({ groundTruth: sample.label, predicted: mlLabel });
+    neuralPreds.push({ groundTruth: sample.label, predicted: neuralLabel });
 
     samplePredictions.push({
       id: sample.id,
@@ -154,6 +165,9 @@ export function evaluateModels(samples: LabeledSample[]): EvaluationResult {
       mlDecision: mlResult.decision,
       mlRiskScore: round(mlResult.riskScore),
       mlPredictedLabel: mlLabel,
+      neuralDecision: neuralResult.decision,
+      neuralRiskScore: round(neuralResult.riskScore),
+      neuralPredictedLabel: neuralLabel,
     });
 
     // Category breakdown
@@ -162,6 +176,7 @@ export function evaluateModels(samples: LabeledSample[]): EvaluationResult {
         total: 0,
         baselineDecisions: {},
         mlDecisions: {},
+        neuralDecisions: {},
       });
     }
     const cat = categoryMap.get(sample.category)!;
@@ -170,10 +185,13 @@ export function evaluateModels(samples: LabeledSample[]): EvaluationResult {
       (cat.baselineDecisions[baselineResult.decision] || 0) + 1;
     cat.mlDecisions[mlResult.decision] =
       (cat.mlDecisions[mlResult.decision] || 0) + 1;
+    cat.neuralDecisions[neuralResult.decision] =
+      (cat.neuralDecisions[neuralResult.decision] || 0) + 1;
   }
 
   const baselineMetrics = computeMetrics("Baseline Rule Model", baselinePreds);
   const mlMetrics = computeMetrics("ML Anomaly Classifier", mlPreds);
+  const neuralMetrics = computeMetrics("Neural-Net Scorer", neuralPreds);
 
   const categoryBreakdowns: CategoryBreakdown[] = [];
   for (const [category, data] of categoryMap.entries()) {
@@ -182,6 +200,7 @@ export function evaluateModels(samples: LabeledSample[]): EvaluationResult {
       totalSamples: data.total,
       baselineDecisions: data.baselineDecisions,
       mlDecisions: data.mlDecisions,
+      neuralDecisions: data.neuralDecisions,
     });
   }
 
@@ -198,6 +217,7 @@ export function evaluateModels(samples: LabeledSample[]): EvaluationResult {
     categories: categoryBreakdowns.map((c) => c.category),
     baseline: baselineMetrics,
     ml: mlMetrics,
+    neural: neuralMetrics,
     categoryBreakdowns,
     samplePredictions,
   };

@@ -1,0 +1,148 @@
+{
+  "timestamp": "2026-08-17T09:39:36.620Z",
+  "summary": {
+    "total": 23,
+    "passed": 23,
+    "failed": 0
+  },
+  "results": [
+    {
+      "category": "auth",
+      "test": "Missing Authorization header → 401",
+      "passed": true,
+      "detail": "status=401"
+    },
+    {
+      "category": "auth",
+      "test": "Malformed JWT → 401",
+      "passed": true,
+      "detail": "status=401"
+    },
+    {
+      "category": "auth",
+      "test": "Empty Bearer value → 401",
+      "passed": true,
+      "detail": "status=401"
+    },
+    {
+      "category": "auth",
+      "test": "Basic auth scheme → 401",
+      "passed": true,
+      "detail": "status=401"
+    },
+    {
+      "category": "auth",
+      "test": "Tampered JWT payload → 401",
+      "passed": true,
+      "detail": "status=401"
+    },
+    {
+      "category": "isolation",
+      "test": "I3: Authentic session sees its own orders",
+      "passed": true,
+      "detail": "normalOrders=1"
+    },
+    {
+      "category": "isolation",
+      "test": "I1: Shadow session cannot read authentic orders",
+      "passed": true,
+      "detail": "shadowOrders=0"
+    },
+    {
+      "category": "isolation",
+      "test": "I2: Shadow writes go to shadow-scoped records",
+      "passed": true,
+      "detail": "shadowOrders=1"
+    },
+    {
+      "category": "isolation",
+      "test": "I4: Shadow transition is irreversible (NORMAL signal doesn't undo it)",
+      "passed": true,
+      "detail": "stateAfterNormalSignal=SHADOW"
+    },
+    {
+      "category": "fuzzing",
+      "test": "NaN values → no server crash",
+      "passed": true,
+      "detail": "status=200"
+    },
+    {
+      "category": "fuzzing",
+      "test": "Infinity values → no server crash",
+      "passed": true,
+      "detail": "status=200"
+    },
+    {
+      "category": "fuzzing",
+      "test": "Negative values → no server crash",
+      "passed": true,
+      "detail": "status=200"
+    },
+    {
+      "category": "fuzzing",
+      "test": "Null signal fields → no server crash",
+      "passed": true,
+      "detail": "status=200"
+    },
+    {
+      "category": "fuzzing",
+      "test": "Zero values → no server crash",
+      "passed": true,
+      "detail": "status=200"
+    },
+    {
+      "category": "fuzzing",
+      "test": "Extreme large values → no server crash",
+      "passed": true,
+      "detail": "status=200"
+    },
+    {
+      "category": "fuzzing",
+      "test": "Empty object → no server crash",
+      "passed": true,
+      "detail": "status=200"
+    },
+    {
+      "category": "fuzzing",
+      "test": "String instead of number → no server crash",
+      "passed": true,
+      "detail": "status=400"
+    },
+    {
+      "category": "fuzzing",
+      "test": "Array instead of object → no server crash",
+      "passed": true,
+      "detail": "status=200"
+    },
+    {
+      "category": "fuzzing",
+      "test": "Massive string field → no server crash",
+      "passed": true,
+      "detail": "status=200"
+    },
+    {
+      "category": "secrets",
+      "test": "Register response doesn't contain password",
+      "passed": true,
+      "detail": "checked response body"
+    },
+    {
+      "category": "secrets",
+      "test": "Register response doesn't contain 'JWT_SECRET'",
+      "passed": true,
+      "detail": "checked response body"
+    },
+    {
+      "category": "secrets",
+      "test": "Login response doesn't contain password",
+      "passed": true,
+      "detail": "checked response body"
+    },
+    {
+      "category": "secrets",
+      "test": "Login response doesn't expose password hash",
+      "passed": true,
+      "detail": "no bcrypt/argon hash in response"
+    }
+  ]
+}

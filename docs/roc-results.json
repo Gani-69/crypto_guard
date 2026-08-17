@@ -1,0 +1,1541 @@
+{
+  "timestamp": "2026-08-17T09:35:36.310Z",
+  "datasetSize": 1000,
+  "seed": 42,
+  "thresholdSteps": 101,
+  "models": [
+    {
+      "modelName": "Baseline Rule Model",
+      "auc": 0.9992,
+      "curve": [
+        {
+          "threshold": 0,
+          "tpr": 1,
+          "fpr": 1
+        },
+        {
+          "threshold": 0.01,
+          "tpr": 0.9983,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.02,
+          "tpr": 0.9983,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.03,
+          "tpr": 0.9983,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.04,
+          "tpr": 0.9983,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.05,
+          "tpr": 0.9983,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.06,
+          "tpr": 0.9983,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.07,
+          "tpr": 0.9983,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.08,
+          "tpr": 0.9983,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.09,
+          "tpr": 0.9983,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.1,
+          "tpr": 0.9983,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.11,
+          "tpr": 0.9983,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.12,
+          "tpr": 0.9983,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.13,
+          "tpr": 0.9983,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.14,
+          "tpr": 0.9983,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.15,
+          "tpr": 0.9983,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.16,
+          "tpr": 0.9983,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.17,
+          "tpr": 0.9983,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.18,
+          "tpr": 0.9983,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.19,
+          "tpr": 0.9983,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.2,
+          "tpr": 0.9983,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.21,
+          "tpr": 0.9833,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.22,
+          "tpr": 0.9833,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.23,
+          "tpr": 0.9833,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.24,
+          "tpr": 0.9833,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.25,
+          "tpr": 0.9833,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.26,
+          "tpr": 0.9833,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.27,
+          "tpr": 0.9833,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.28,
+          "tpr": 0.9833,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.29,
+          "tpr": 0.9833,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.3,
+          "tpr": 0.9833,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.31,
+          "tpr": 0.9817,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.32,
+          "tpr": 0.9817,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.33,
+          "tpr": 0.9817,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.34,
+          "tpr": 0.9817,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.35,
+          "tpr": 0.9817,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.36,
+          "tpr": 0.9817,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.37,
+          "tpr": 0.9817,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.38,
+          "tpr": 0.9817,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.39,
+          "tpr": 0.9817,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.4,
+          "tpr": 0.9817,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.41,
+          "tpr": 0.9583,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.42,
+          "tpr": 0.9583,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.43,
+          "tpr": 0.9583,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.44,
+          "tpr": 0.9583,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.45,
+          "tpr": 0.9583,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.46,
+          "tpr": 0.9583,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.47,
+          "tpr": 0.9583,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.48,
+          "tpr": 0.9583,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.49,
+          "tpr": 0.9583,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.5,
+          "tpr": 0.9583,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.51,
+          "tpr": 0.575,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.52,
+          "tpr": 0.575,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.53,
+          "tpr": 0.575,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.54,
+          "tpr": 0.575,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.55,
+          "tpr": 0.575,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.56,
+          "tpr": 0.575,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.57,
+          "tpr": 0.575,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.58,
+          "tpr": 0.575,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.59,
+          "tpr": 0.575,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.6,
+          "tpr": 0.575,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.61,
+          "tpr": 0.575,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.62,
+          "tpr": 0.575,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.63,
+          "tpr": 0.575,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.64,
+          "tpr": 0.575,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.65,
+          "tpr": 0.575,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.66,
+          "tpr": 0.575,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.67,
+          "tpr": 0.575,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.68,
+          "tpr": 0.575,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.69,
+          "tpr": 0.575,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.7,
+          "tpr": 0.575,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.71,
+          "tpr": 0.435,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.72,
+          "tpr": 0.435,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.73,
+          "tpr": 0.435,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.74,
+          "tpr": 0.435,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.75,
+          "tpr": 0.435,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.76,
+          "tpr": 0.1017,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.77,
+          "tpr": 0.1017,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.78,
+          "tpr": 0.1017,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.79,
+          "tpr": 0.1017,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.8,
+          "tpr": 0.1017,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.81,
+          "tpr": 0.9983,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.82,
+          "tpr": 0.065,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.83,
+          "tpr": 0.065,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.84,
+          "tpr": 0.065,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.85,
+          "tpr": 0.065,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.86,
+          "tpr": 0.065,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.87,
+          "tpr": 0.065,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.88,
+          "tpr": 0.065,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.89,
+          "tpr": 0.065,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.9,
+          "tpr": 0.065,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.91,
+          "tpr": 0.065,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.92,
+          "tpr": 0.065,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.93,
+          "tpr": 0.065,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.94,
+          "tpr": 0.065,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.95,
+          "tpr": 0.065,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.96,
+          "tpr": 0.065,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.97,
+          "tpr": 0.065,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.98,
+          "tpr": 0.065,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.99,
+          "tpr": 0.065,
+          "fpr": 0
+        },
+        {
+          "threshold": 1,
+          "tpr": 0.065,
+          "fpr": 0
+        }
+      ]
+    },
+    {
+      "modelName": "ML Anomaly Classifier",
+      "auc": 1,
+      "curve": [
+        {
+          "threshold": 0,
+          "tpr": 1,
+          "fpr": 1
+        },
+        {
+          "threshold": 0.01,
+          "tpr": 1,
+          "fpr": 1
+        },
+        {
+          "threshold": 0.02,
+          "tpr": 1,
+          "fpr": 1
+        },
+        {
+          "threshold": 0.03,
+          "tpr": 1,
+          "fpr": 0.9975
+        },
+        {
+          "threshold": 0.04,
+          "tpr": 1,
+          "fpr": 0.9875
+        },
+        {
+          "threshold": 0.05,
+          "tpr": 1,
+          "fpr": 0.9375
+        },
+        {
+          "threshold": 0.06,
+          "tpr": 1,
+          "fpr": 0.8325
+        },
+        {
+          "threshold": 0.07,
+          "tpr": 1,
+          "fpr": 0.745
+        },
+        {
+          "threshold": 0.08,
+          "tpr": 1,
+          "fpr": 0.6775
+        },
+        {
+          "threshold": 0.09,
+          "tpr": 1,
+          "fpr": 0.61
+        },
+        {
+          "threshold": 0.1,
+          "tpr": 1,
+          "fpr": 0.545
+        },
+        {
+          "threshold": 0.11,
+          "tpr": 1,
+          "fpr": 0.495
+        },
+        {
+          "threshold": 0.12,
+          "tpr": 1,
+          "fpr": 0.455
+        },
+        {
+          "threshold": 0.13,
+          "tpr": 1,
+          "fpr": 0.4125
+        },
+        {
+          "threshold": 0.14,
+          "tpr": 1,
+          "fpr": 0.3925
+        },
+        {
+          "threshold": 0.15,
+          "tpr": 1,
+          "fpr": 0.35
+        },
+        {
+          "threshold": 0.16,
+          "tpr": 1,
+          "fpr": 0.325
+        },
+        {
+          "threshold": 0.17,
+          "tpr": 1,
+          "fpr": 0.2975
+        },
+        {
+          "threshold": 0.18,
+          "tpr": 1,
+          "fpr": 0.285
+        },
+        {
+          "threshold": 0.19,
+          "tpr": 1,
+          "fpr": 0.2725
+        },
+        {
+          "threshold": 0.2,
+          "tpr": 1,
+          "fpr": 0.26
+        },
+        {
+          "threshold": 0.21,
+          "tpr": 1,
+          "fpr": 0.245
+        },
+        {
+          "threshold": 0.22,
+          "tpr": 1,
+          "fpr": 0.23
+        },
+        {
+          "threshold": 0.23,
+          "tpr": 1,
+          "fpr": 0.2175
+        },
+        {
+          "threshold": 0.24,
+          "tpr": 1,
+          "fpr": 0.205
+        },
+        {
+          "threshold": 0.25,
+          "tpr": 1,
+          "fpr": 0.19
+        },
+        {
+          "threshold": 0.26,
+          "tpr": 1,
+          "fpr": 0.19
+        },
+        {
+          "threshold": 0.27,
+          "tpr": 1,
+          "fpr": 0.1825
+        },
+        {
+          "threshold": 0.28,
+          "tpr": 1,
+          "fpr": 0.175
+        },
+        {
+          "threshold": 0.29,
+          "tpr": 1,
+          "fpr": 0.165
+        },
+        {
+          "threshold": 0.3,
+          "tpr": 1,
+          "fpr": 0.15
+        },
+        {
+          "threshold": 0.31,
+          "tpr": 1,
+          "fpr": 0.14
+        },
+        {
+          "threshold": 0.32,
+          "tpr": 1,
+          "fpr": 0.1375
+        },
+        {
+          "threshold": 0.33,
+          "tpr": 1,
+          "fpr": 0.13
+        },
+        {
+          "threshold": 0.34,
+          "tpr": 1,
+          "fpr": 0.1275
+        },
+        {
+          "threshold": 0.35,
+          "tpr": 1,
+          "fpr": 0.125
+        },
+        {
+          "threshold": 0.36,
+          "tpr": 1,
+          "fpr": 0.1175
+        },
+        {
+          "threshold": 0.37,
+          "tpr": 1,
+          "fpr": 0.11
+        },
+        {
+          "threshold": 0.38,
+          "tpr": 1,
+          "fpr": 0.11
+        },
+        {
+          "threshold": 0.39,
+          "tpr": 1,
+          "fpr": 0.1025
+        },
+        {
+          "threshold": 0.4,
+          "tpr": 1,
+          "fpr": 0.1
+        },
+        {
+          "threshold": 0.41,
+          "tpr": 1,
+          "fpr": 0.0925
+        },
+        {
+          "threshold": 0.42,
+          "tpr": 1,
+          "fpr": 0.0875
+        },
+        {
+          "threshold": 0.43,
+          "tpr": 1,
+          "fpr": 0.0825
+        },
+        {
+          "threshold": 0.44,
+          "tpr": 1,
+          "fpr": 0.08
+        },
+        {
+          "threshold": 0.45,
+          "tpr": 1,
+          "fpr": 0.08
+        },
+        {
+          "threshold": 0.46,
+          "tpr": 1,
+          "fpr": 0.0775
+        },
+        {
+          "threshold": 0.47,
+          "tpr": 1,
+          "fpr": 0.07
+        },
+        {
+          "threshold": 0.48,
+          "tpr": 1,
+          "fpr": 0.065
+        },
+        {
+          "threshold": 0.49,
+          "tpr": 1,
+          "fpr": 0.0625
+        },
+        {
+          "threshold": 0.5,
+          "tpr": 1,
+          "fpr": 0.0575
+        },
+        {
+          "threshold": 0.51,
+          "tpr": 1,
+          "fpr": 0.055
+        },
+        {
+          "threshold": 0.52,
+          "tpr": 1,
+          "fpr": 0.0525
+        },
+        {
+          "threshold": 0.53,
+          "tpr": 1,
+          "fpr": 0.05
+        },
+        {
+          "threshold": 0.54,
+          "tpr": 1,
+          "fpr": 0.0475
+        },
+        {
+          "threshold": 0.55,
+          "tpr": 1,
+          "fpr": 0.04
+        },
+        {
+          "threshold": 0.56,
+          "tpr": 1,
+          "fpr": 0.04
+        },
+        {
+          "threshold": 0.57,
+          "tpr": 1,
+          "fpr": 0.0375
+        },
+        {
+          "threshold": 0.58,
+          "tpr": 1,
+          "fpr": 0.0375
+        },
+        {
+          "threshold": 0.59,
+          "tpr": 1,
+          "fpr": 0.0375
+        },
+        {
+          "threshold": 0.6,
+          "tpr": 1,
+          "fpr": 0.035
+        },
+        {
+          "threshold": 0.61,
+          "tpr": 1,
+          "fpr": 0.03
+        },
+        {
+          "threshold": 0.62,
+          "tpr": 1,
+          "fpr": 0.025
+        },
+        {
+          "threshold": 0.63,
+          "tpr": 1,
+          "fpr": 0.0225
+        },
+        {
+          "threshold": 0.64,
+          "tpr": 1,
+          "fpr": 0.02
+        },
+        {
+          "threshold": 0.65,
+          "tpr": 1,
+          "fpr": 0.0175
+        },
+        {
+          "threshold": 0.66,
+          "tpr": 1,
+          "fpr": 0.0125
+        },
+        {
+          "threshold": 0.67,
+          "tpr": 1,
+          "fpr": 0.0125
+        },
+        {
+          "threshold": 0.68,
+          "tpr": 1,
+          "fpr": 0.01
+        },
+        {
+          "threshold": 0.69,
+          "tpr": 1,
+          "fpr": 0.01
+        },
+        {
+          "threshold": 0.7,
+          "tpr": 1,
+          "fpr": 0.01
+        },
+        {
+          "threshold": 0.71,
+          "tpr": 1,
+          "fpr": 0.0075
+        },
+        {
+          "threshold": 0.72,
+          "tpr": 1,
+          "fpr": 0.0075
+        },
+        {
+          "threshold": 0.73,
+          "tpr": 1,
+          "fpr": 0.005
+        },
+        {
+          "threshold": 0.74,
+          "tpr": 1,
+          "fpr": 0.005
+        },
+        {
+          "threshold": 0.75,
+          "tpr": 1,
+          "fpr": 0.005
+        },
+        {
+          "threshold": 0.76,
+          "tpr": 1,
+          "fpr": 0.005
+        },
+        {
+          "threshold": 0.77,
+          "tpr": 1,
+          "fpr": 0.005
+        },
+        {
+          "threshold": 0.78,
+          "tpr": 1,
+          "fpr": 0.005
+        },
+        {
+          "threshold": 0.79,
+          "tpr": 1,
+          "fpr": 0.005
+        },
+        {
+          "threshold": 0.8,
+          "tpr": 1,
+          "fpr": 0.005
+        },
+        {
+          "threshold": 0.81,
+          "tpr": 1,
+          "fpr": 0.005
+        },
+        {
+          "threshold": 0.82,
+          "tpr": 1,
+          "fpr": 0.005
+        },
+        {
+          "threshold": 0.83,
+          "tpr": 1,
+          "fpr": 0.0025
+        },
+        {
+          "threshold": 0.84,
+          "tpr": 1,
+          "fpr": 0.0025
+        },
+        {
+          "threshold": 0.85,
+          "tpr": 1,
+          "fpr": 0.0025
+        },
+        {
+          "threshold": 0.86,
+          "tpr": 1,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.87,
+          "tpr": 1,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.88,
+          "tpr": 1,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.89,
+          "tpr": 1,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.9,
+          "tpr": 1,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.91,
+          "tpr": 1,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.92,
+          "tpr": 1,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.93,
+          "tpr": 1,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.94,
+          "tpr": 1,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.95,
+          "tpr": 1,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.96,
+          "tpr": 1,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.97,
+          "tpr": 1,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.98,
+          "tpr": 1,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.99,
+          "tpr": 1,
+          "fpr": 0
+        },
+        {
+          "threshold": 1,
+          "tpr": 1,
+          "fpr": 0
+        }
+      ]
+    },
+    {
+      "modelName": "Neural-Net Scorer",
+      "auc": 1,
+      "curve": [
+        {
+          "threshold": 0,
+          "tpr": 1,
+          "fpr": 1
+        },
+        {
+          "threshold": 0.01,
+          "tpr": 1,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.02,
+          "tpr": 1,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.03,
+          "tpr": 1,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.04,
+          "tpr": 1,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.05,
+          "tpr": 1,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.06,
+          "tpr": 1,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.07,
+          "tpr": 1,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.08,
+          "tpr": 1,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.09,
+          "tpr": 1,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.1,
+          "tpr": 1,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.11,
+          "tpr": 1,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.12,
+          "tpr": 1,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.13,
+          "tpr": 1,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.14,
+          "tpr": 1,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.15,
+          "tpr": 1,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.16,
+          "tpr": 1,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.17,
+          "tpr": 1,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.18,
+          "tpr": 1,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.19,
+          "tpr": 1,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.2,
+          "tpr": 1,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.21,
+          "tpr": 1,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.22,
+          "tpr": 1,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.23,
+          "tpr": 1,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.24,
+          "tpr": 1,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.25,
+          "tpr": 1,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.26,
+          "tpr": 1,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.27,
+          "tpr": 1,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.28,
+          "tpr": 1,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.29,
+          "tpr": 1,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.3,
+          "tpr": 1,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.31,
+          "tpr": 1,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.32,
+          "tpr": 1,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.33,
+          "tpr": 1,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.34,
+          "tpr": 1,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.35,
+          "tpr": 1,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.36,
+          "tpr": 1,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.37,
+          "tpr": 1,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.38,
+          "tpr": 1,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.39,
+          "tpr": 1,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.4,
+          "tpr": 1,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.41,
+          "tpr": 1,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.42,
+          "tpr": 1,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.43,
+          "tpr": 1,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.44,
+          "tpr": 1,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.45,
+          "tpr": 1,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.46,
+          "tpr": 1,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.47,
+          "tpr": 1,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.48,
+          "tpr": 1,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.49,
+          "tpr": 1,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.5,
+          "tpr": 1,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.51,
+          "tpr": 1,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.52,
+          "tpr": 1,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.53,
+          "tpr": 1,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.54,
+          "tpr": 1,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.55,
+          "tpr": 1,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.56,
+          "tpr": 1,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.57,
+          "tpr": 1,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.58,
+          "tpr": 1,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.59,
+          "tpr": 1,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.6,
+          "tpr": 1,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.61,
+          "tpr": 1,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.62,
+          "tpr": 1,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.63,
+          "tpr": 1,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.64,
+          "tpr": 1,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.65,
+          "tpr": 1,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.66,
+          "tpr": 1,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.67,
+          "tpr": 1,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.68,
+          "tpr": 1,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.69,
+          "tpr": 1,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.7,
+          "tpr": 1,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.71,
+          "tpr": 1,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.72,
+          "tpr": 1,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.73,
+          "tpr": 1,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.74,
+          "tpr": 1,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.75,
+          "tpr": 1,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.76,
+          "tpr": 1,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.77,
+          "tpr": 1,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.78,
+          "tpr": 1,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.79,
+          "tpr": 1,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.8,
+          "tpr": 1,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.81,
+          "tpr": 1,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.82,
+          "tpr": 1,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.83,
+          "tpr": 1,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.84,
+          "tpr": 1,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.85,
+          "tpr": 1,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.86,
+          "tpr": 1,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.87,
+          "tpr": 1,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.88,
+          "tpr": 1,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.89,
+          "tpr": 1,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.9,
+          "tpr": 1,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.91,
+          "tpr": 1,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.92,
+          "tpr": 1,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.93,
+          "tpr": 1,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.94,
+          "tpr": 1,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.95,
+          "tpr": 1,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.96,
+          "tpr": 1,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.97,
+          "tpr": 1,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.98,
+          "tpr": 1,
+          "fpr": 0
+        },
+        {
+          "threshold": 0.99,
+          "tpr": 1,
+          "fpr": 0
+        },
+        {
+          "threshold": 1,
+          "tpr": 1,
+          "fpr": 0
+        }
+      ]
+    }
+  ]
+}

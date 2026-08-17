@@ -81,7 +81,7 @@ model BehavioralEvent {
 
 // ---------- ARES: risk scoring output ----------
 
-// RiskModel values: BASELINE_RULE | ML_MODEL
+// RiskModel values: BASELINE_RULE | ML_MODEL | NEURAL_NET
 
 model RiskEvent {
   id           String   @id @default(uuid())

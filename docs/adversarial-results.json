@@ -1,0 +1,344 @@
+{
+  "timestamp": "2026-08-17T09:36:38.003Z",
+  "configuration": {
+    "trialsPerBasePerAttack": 100,
+    "anomalousBases": [
+      "COERCED",
+      "BOT",
+      "CONTEXT_MISMATCH"
+    ],
+    "totalAttemptsPerModelPerAttack": 300
+  },
+  "results": [
+    {
+      "modelName": "Baseline Rule Model",
+      "attack": "Blind (interpolation + noise)",
+      "totalAttempts": 300,
+      "evasions": 200,
+      "evasionRate": 0.6667,
+      "avgStepsToEvade": 0.5,
+      "sampleTrajectories": [
+        {
+          "steps": 1,
+          "finalRisk": 0.2,
+          "evaded": true
+        },
+        {
+          "steps": 1,
+          "finalRisk": 0.2,
+          "evaded": true
+        },
+        {
+          "steps": 1,
+          "finalRisk": 0.2,
+          "evaded": true
+        },
+        {
+          "steps": 0,
+          "finalRisk": 0,
+          "evaded": true
+        },
+        {
+          "steps": 0,
+          "finalRisk": 0,
+          "evaded": true
+        },
+        {
+          "steps": 0,
+          "finalRisk": 0,
+          "evaded": true
+        },
+        {
+          "steps": 50,
+          "finalRisk": 0.75,
+          "evaded": false
+        },
+        {
+          "steps": 50,
+          "finalRisk": 0.75,
+          "evaded": false
+        },
+        {
+          "steps": 50,
+          "finalRisk": 0.75,
+          "evaded": false
+        }
+      ]
+    },
+    {
+      "modelName": "ML Anomaly Classifier",
+      "attack": "Blind (interpolation + noise)",
+      "totalAttempts": 300,
+      "evasions": 200,
+      "evasionRate": 0.6667,
+      "avgStepsToEvade": 12,
+      "sampleTrajectories": [
+        {
+          "steps": 15,
+          "finalRisk": 0.35,
+          "evaded": true
+        },
+        {
+          "steps": 14,
+          "finalRisk": 0.34,
+          "evaded": true
+        },
+        {
+          "steps": 15,
+          "finalRisk": 0.36,
+          "evaded": true
+        },
+        {
+          "steps": 10,
+          "finalRisk": 0.33,
+          "evaded": true
+        },
+        {
+          "steps": 9,
+          "finalRisk": 0.34,
+          "evaded": true
+        },
+        {
+          "steps": 9,
+          "finalRisk": 0.35,
+          "evaded": true
+        },
+        {
+          "steps": 50,
+          "finalRisk": 0.99,
+          "evaded": false
+        },
+        {
+          "steps": 50,
+          "finalRisk": 0.99,
+          "evaded": false
+        },
+        {
+          "steps": 50,
+          "finalRisk": 0.99,
+          "evaded": false
+        }
+      ]
+    },
+    {
+      "modelName": "Neural-Net Scorer",
+      "attack": "Blind (interpolation + noise)",
+      "totalAttempts": 300,
+      "evasions": 200,
+      "evasionRate": 0.6667,
+      "avgStepsToEvade": 6,
+      "sampleTrajectories": [
+        {
+          "steps": 8,
+          "finalRisk": 0.11,
+          "evaded": true
+        },
+        {
+          "steps": 8,
+          "finalRisk": 0.02,
+          "evaded": true
+        },
+        {
+          "steps": 8,
+          "finalRisk": 0.06,
+          "evaded": true
+        },
+        {
+          "steps": 4,
+          "finalRisk": 0.25,
+          "evaded": true
+        },
+        {
+          "steps": 4,
+          "finalRisk": 0.13,
+          "evaded": true
+        },
+        {
+          "steps": 4,
+          "finalRisk": 0.28,
+          "evaded": true
+        },
+        {
+          "steps": 50,
+          "finalRisk": 1,
+          "evaded": false
+        },
+        {
+          "steps": 50,
+          "finalRisk": 1,
+          "evaded": false
+        },
+        {
+          "steps": 50,
+          "finalRisk": 1,
+          "evaded": false
+        }
+      ]
+    },
+    {
+      "modelName": "Baseline Rule Model",
+      "attack": "White-box (optimal interpolation)",
+      "totalAttempts": 300,
+      "evasions": 300,
+      "evasionRate": 1,
+      "avgStepsToEvade": 0.7,
+      "sampleTrajectories": [
+        {
+          "steps": 1,
+          "finalRisk": 0.2,
+          "evaded": true
+        },
+        {
+          "steps": 1,
+          "finalRisk": 0.2,
+          "evaded": true
+        },
+        {
+          "steps": 1,
+          "finalRisk": 0.2,
+          "evaded": true
+        },
+        {
+          "steps": 0,
+          "finalRisk": 0,
+          "evaded": true
+        },
+        {
+          "steps": 0,
+          "finalRisk": 0,
+          "evaded": true
+        },
+        {
+          "steps": 0,
+          "finalRisk": 0,
+          "evaded": true
+        },
+        {
+          "steps": 1,
+          "finalRisk": 0,
+          "evaded": true
+        },
+        {
+          "steps": 1,
+          "finalRisk": 0,
+          "evaded": true
+        },
+        {
+          "steps": 1,
+          "finalRisk": 0,
+          "evaded": true
+        }
+      ]
+    },
+    {
+      "modelName": "ML Anomaly Classifier",
+      "attack": "White-box (optimal interpolation)",
+      "totalAttempts": 300,
+      "evasions": 300,
+      "evasionRate": 1,
+      "avgStepsToEvade": 3,
+      "sampleTrajectories": [
+        {
+          "steps": 5,
+          "finalRisk": 0.22,
+          "evaded": true
+        },
+        {
+          "steps": 5,
+          "finalRisk": 0.22,
+          "evaded": true
+        },
+        {
+          "steps": 5,
+          "finalRisk": 0.22,
+          "evaded": true
+        },
+        {
+          "steps": 3,
+          "finalRisk": 0.27,
+          "evaded": true
+        },
+        {
+          "steps": 3,
+          "finalRisk": 0.27,
+          "evaded": true
+        },
+        {
+          "steps": 3,
+          "finalRisk": 0.27,
+          "evaded": true
+        },
+        {
+          "steps": 1,
+          "finalRisk": 0.03,
+          "evaded": true
+        },
+        {
+          "steps": 1,
+          "finalRisk": 0.03,
+          "evaded": true
+        },
+        {
+          "steps": 1,
+          "finalRisk": 0.03,
+          "evaded": true
+        }
+      ]
+    },
+    {
+      "modelName": "Neural-Net Scorer",
+      "attack": "White-box (optimal interpolation)",
+      "totalAttempts": 300,
+      "evasions": 300,
+      "evasionRate": 1,
+      "avgStepsToEvade": 2,
+      "sampleTrajectories": [
+        {
+          "steps": 3,
+          "finalRisk": 0,
+          "evaded": true
+        },
+        {
+          "steps": 3,
+          "finalRisk": 0,
+          "evaded": true
+        },
+        {
+          "steps": 3,
+          "finalRisk": 0,
+          "evaded": true
+        },
+        {
+          "steps": 2,
+          "finalRisk": 0,
+          "evaded": true
+        },
+        {
+          "steps": 2,
+          "finalRisk": 0,
+          "evaded": true
+        },
+        {
+          "steps": 2,
+          "finalRisk": 0,
+          "evaded": true
+        },
+        {
+          "steps": 1,
+          "finalRisk": 0,
+          "evaded": true
+        },
+        {
+          "steps": 1,
+          "finalRisk": 0,
+          "evaded": true
+        },
+        {
+          "steps": 1,
+          "finalRisk": 0,
+          "evaded": true
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,284 @@
+{
+  "timestamp": "2026-08-17T09:39:57.886Z",
+  "configuration": {
+    "nRuns": 30,
+    "seeds": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      20,
+      21,
+      22,
+      23,
+      24,
+      25,
+      26,
+      27,
+      28,
+      29,
+      30
+    ],
+    "samplesPerCategory": 200,
+    "neuralTrainingSeeds": "1000–1099 (disjoint)"
+  },
+  "descriptiveStatistics": {
+    "baseline": {
+      "accuracy": {
+        "mean": 0.9906,
+        "std": 0.0038
+      },
+      "f1Score": {
+        "mean": 0.9921,
+        "std": 0.0032
+      },
+      "precision": {
+        "mean": 1,
+        "std": 0
+      },
+      "recall": {
+        "mean": 0.9843,
+        "std": 0.0063
+      },
+      "falsePositiveRate": {
+        "mean": 0,
+        "std": 0
+      },
+      "falseNegativeRate": {
+        "mean": 0.0157,
+        "std": 0.0063
+      }
+    },
+    "ml": {
+      "accuracy": {
+        "mean": 0.9623,
+        "std": 0.0063
+      },
+      "f1Score": {
+        "mean": 0.9696,
+        "std": 0.0049
+      },
+      "precision": {
+        "mean": 0.941,
+        "std": 0.0093
+      },
+      "recall": {
+        "mean": 1,
+        "std": 0
+      },
+      "falsePositiveRate": {
+        "mean": 0.0942,
+        "std": 0.0158
+      },
+      "falseNegativeRate": {
+        "mean": 0,
+        "std": 0
+      }
+    },
+    "neural": {
+      "accuracy": {
+        "mean": 1,
+        "std": 0
+      },
+      "f1Score": {
+        "mean": 1,
+        "std": 0
+      },
+      "precision": {
+        "mean": 1,
+        "std": 0
+      },
+      "recall": {
+        "mean": 1,
+        "std": 0
+      },
+      "falsePositiveRate": {
+        "mean": 0,
+        "std": 0
+      },
+      "falseNegativeRate": {
+        "mean": 0,
+        "std": 0
+      }
+    }
+  },
+  "pairwiseComparisons": [
+    {
+      "metric": "accuracy",
+      "pair": "Baseline vs ML",
+      "t": 17.9068,
+      "p": 0,
+      "df": 29,
+      "cohensD": 5.4263,
+      "significant": true
+    },
+    {
+      "metric": "accuracy",
+      "pair": "Baseline vs Neural",
+      "t": -13.6729,
+      "p": 0,
+      "df": 29,
+      "cohensD": -3.5303,
+      "significant": true
+    },
+    {
+      "metric": "accuracy",
+      "pair": "ML vs Neural",
+      "t": -32.5829,
+      "p": 0,
+      "df": 29,
+      "cohensD": -8.4129,
+      "significant": true
+    },
+    {
+      "metric": "f1Score",
+      "pair": "Baseline vs ML",
+      "t": 17.7375,
+      "p": 0,
+      "df": 29,
+      "cohensD": 5.4055,
+      "significant": true
+    },
+    {
+      "metric": "f1Score",
+      "pair": "Baseline vs Neural",
+      "t": -13.5706,
+      "p": 0,
+      "df": 29,
+      "cohensD": -3.5039,
+      "significant": true
+    },
+    {
+      "metric": "f1Score",
+      "pair": "ML vs Neural",
+      "t": -33.7148,
+      "p": 0,
+      "df": 29,
+      "cohensD": -8.7051,
+      "significant": true
+    },
+    {
+      "metric": "precision",
+      "pair": "Baseline vs ML",
+      "t": 34.6786,
+      "p": 0,
+      "df": 29,
+      "cohensD": 8.954,
+      "significant": true
+    },
+    {
+      "metric": "precision",
+      "pair": "Baseline vs Neural",
+      "t": 0,
+      "p": 1,
+      "df": 29,
+      "cohensD": 0,
+      "significant": false
+    },
+    {
+      "metric": "precision",
+      "pair": "ML vs Neural",
+      "t": -34.6786,
+      "p": 0,
+      "df": 29,
+      "cohensD": -8.954,
+      "significant": true
+    },
+    {
+      "metric": "recall",
+      "pair": "Baseline vs ML",
+      "t": -13.6684,
+      "p": 0,
+      "df": 29,
+      "cohensD": -3.5292,
+      "significant": true
+    },
+    {
+      "metric": "recall",
+      "pair": "Baseline vs Neural",
+      "t": -13.6684,
+      "p": 0,
+      "df": 29,
+      "cohensD": -3.5292,
+      "significant": true
+    },
+    {
+      "metric": "recall",
+      "pair": "ML vs Neural",
+      "t": 0,
+      "p": 1,
+      "df": 29,
+      "cohensD": 0,
+      "significant": false
+    },
+    {
+      "metric": "falsePositiveRate",
+      "pair": "Baseline vs ML",
+      "t": -32.5829,
+      "p": 0,
+      "df": 29,
+      "cohensD": -8.4129,
+      "significant": true
+    },
+    {
+      "metric": "falsePositiveRate",
+      "pair": "Baseline vs Neural",
+      "t": 0,
+      "p": 1,
+      "df": 29,
+      "cohensD": 0,
+      "significant": false
+    },
+    {
+      "metric": "falsePositiveRate",
+      "pair": "ML vs Neural",
+      "t": 32.5829,
+      "p": 0,
+      "df": 29,
+      "cohensD": 8.4129,
+      "significant": true
+    },
+    {
+      "metric": "falseNegativeRate",
+      "pair": "Baseline vs ML",
+      "t": 13.6684,
+      "p": 0,
+      "df": 29,
+      "cohensD": 3.5292,
+      "significant": true
+    },
+    {
+      "metric": "falseNegativeRate",
+      "pair": "Baseline vs Neural",
+      "t": 13.6684,
+      "p": 0,
+      "df": 29,
+      "cohensD": 3.5292,
+      "significant": true
+    },
+    {
+      "metric": "falseNegativeRate",
+      "pair": "ML vs Neural",
+      "t": 0,
+      "p": 1,
+      "df": 29,
+      "cohensD": 0,
+      "significant": false
+    }
+  ]
+}

@@ -114,8 +114,13 @@ async function runE2ETest() {
     throw new Error(`Failed to send signal: ${signalRes.status}`);
   }
   const signalData = await signalRes.json();
-  console.log(`  ✓ ML model evaluated decision: ${signalData.models.ml.decision}`);
+  console.log(`  ✓ Baseline model decision: ${signalData.models.baseline.decision}`);
+  console.log(`  ✓ ML model decision:       ${signalData.models.ml.decision}`);
+  console.log(`  ✓ Neural model decision:   ${signalData.models.neural.decision}`);
   console.log(`  ✓ Current Session State updated to: ${signalData.sessionState}`);
+  if (!signalData.models.neural) {
+    throw new Error("Neural model result missing from signal response — A2 integration incomplete");
+  }
   if (signalData.sessionState !== "SHADOW") {
     throw new Error(`Expected session state to transition to SHADOW, got: ${signalData.sessionState}`);
   }

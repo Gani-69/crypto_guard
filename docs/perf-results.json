@@ -1,0 +1,69 @@
+{
+  "timestamp": "2026-08-17T09:38:35.207Z",
+  "caveat": "SQLite single-writer model — concurrency benchmarks reflect lock contention, NOT architecture scalability. Rerun against PostgreSQL for representative concurrency numbers.",
+  "scorerLatency": {
+    "unit": "microseconds",
+    "invocations": 10000,
+    "baseline": {
+      "count": 10000,
+      "mean": 3.07,
+      "p50": 2.2,
+      "p95": 5.3,
+      "p99": 12.7,
+      "min": 1.6,
+      "max": 366.5
+    },
+    "ml": {
+      "count": 10000,
+      "mean": 4.52,
+      "p50": 3.3,
+      "p95": 6.9,
+      "p99": 11.4,
+      "min": 2.8,
+      "max": 443.6
+    },
+    "neural": {
+      "count": 10000,
+      "mean": 5.23,
+      "p50": 3.5,
+      "p95": 9.1,
+      "p99": 26,
+      "min": 2.8,
+      "max": 588.7
+    }
+  },
+  "threeModelEvalLatency": {
+    "unit": "microseconds",
+    "invocations": 1000,
+    "stats": {
+      "count": 1000,
+      "mean": 13.44,
+      "p50": 9.7,
+      "p95": 19.1,
+      "p99": 49.1,
+      "min": 8,
+      "max": 383.5
+    }
+  },
+  "datasetGenerationLatency": {
+    "unit": "milliseconds",
+    "invocations": 50,
+    "samplesPerRun": 1000,
+    "stats": {
+      "count": 50,
+      "mean": 0.9,
+      "p50": 0.66,
+      "p95": 2.52,
+      "p99": 3.08,
+      "min": 0.57,
+      "max": 3.08
+    }
+  },
+  "memoryUsage": {
+    "unit": "MB",
+    "rss": 68.01,
+    "heapTotal": 19.91,
+    "heapUsed": 11.84,
+    "external": 4.58
+  }
+}

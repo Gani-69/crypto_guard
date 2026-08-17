@@ -1,4 +1,5 @@
 import { prisma } from "../db/prisma";
+import { NEURAL_WEIGHTS } from "./neural-weights";
 
 export interface BehavioralSignalInput {
   dwellTimeMs?: number | null;
@@ -187,16 +188,74 @@ export function evaluateMLModel(signal: BehavioralSignalInput): ScorerResult {
   };
 }
 
+// ── 3. Neural-Net Model ─────────────────────────────────────────────
+// Pre-trained feedforward network: 6 → 16 (ReLU) → 8 (ReLU) → 1 (sigmoid)
+// Weights loaded from neural-weights.ts (trained on seeds 1000–1099, disjoint from eval seeds)
+export function evaluateNeuralModel(signal: BehavioralSignalInput): ScorerResult {
+  const { dwellTimeMs, flightTimeMs, typingSpeedCpm, correctionRate, context } = signal;
+
+  // Normalize features (same scheme as train-neural.ts)
+  const dwellZ = ((dwellTimeMs ?? constLegitBaseline.dwellTimeMs.mean) / constLegitBaseline.dwellTimeMs.mean) - 1;
+  const flightZ = ((flightTimeMs ?? constLegitBaseline.flightTimeMs.mean) / constLegitBaseline.flightTimeMs.mean) - 1;
+  const speedZ = ((typingSpeedCpm ?? constLegitBaseline.typingSpeedCpm.mean) / constLegitBaseline.typingSpeedCpm.mean) - 1;
+  const corrZ = ((correctionRate ?? constLegitBaseline.correctionRate.mean) / (constLegitBaseline.correctionRate.mean || 0.05)) - 1;
+  const deviceMismatch = (context?.deviceType && context.deviceType !== constLegitBaseline.context.deviceType) ? 1.0 : 0.0;
+  const locationMismatch = (context?.locationCoarse && context.locationCoarse !== constLegitBaseline.context.locationCoarse) ? 1.0 : 0.0;
+
+  const input = [dwellZ, flightZ, speedZ, corrZ, deviceMismatch, locationMismatch];
+
+  // Forward pass — hidden layer 1 (ReLU)
+  const { layer1, layer2, layer3 } = NEURAL_WEIGHTS;
+  const a1: number[] = [];
+  for (let j = 0; j < layer1.biases.length; j++) {
+    let sum = layer1.biases[j];
+    for (let i = 0; i < input.length; i++) sum += layer1.weights[j][i] * input[i];
+    a1.push(Math.max(0, sum)); // ReLU
+  }
+
+  // Hidden layer 2 (ReLU)
+  const a2: number[] = [];
+  for (let j = 0; j < layer2.biases.length; j++) {
+    let sum = layer2.biases[j];
+    for (let i = 0; i < a1.length; i++) sum += layer2.weights[j][i] * a1[i];
+    a2.push(Math.max(0, sum)); // ReLU
+  }
+
+  // Output layer (Sigmoid)
+  let z = layer3.biases[0];
+  for (let i = 0; i < a2.length; i++) z += layer3.weights[0][i] * a2[i];
+  const riskScore = 1.0 / (1.0 + Math.exp(-z));
+
+  const trustScore = 1.0 - riskScore;
+
+  // Confidence based on feature count (same as ML model)
+  let featuresCount = 0;
+  if (dwellTimeMs !== undefined && dwellTimeMs !== null) featuresCount++;
+  if (flightTimeMs !== undefined && flightTimeMs !== null) featuresCount++;
+  if (typingSpeedCpm !== undefined && typingSpeedCpm !== null) featuresCount++;
+  if (correctionRate !== undefined && correctionRate !== null) featuresCount++;
+  const confidence = Math.min(0.5 + (featuresCount * 0.1), 0.95);
+
+  return {
+    riskScore: Math.round(riskScore * 100) / 100,
+    trustScore: Math.round(trustScore * 100) / 100,
+    confidence: Math.round(confidence * 100) / 100,
+    signalsJson: JSON.stringify({ signal, input, model: "NEURAL_NET" }),
+    decision: decideStateFromRisk(riskScore),
+  };
+}
+
 // ── Main ARES Pipeline ────────────────────────────────────────────────
 // Consumes signals, evaluates both models, saves records, updates session
 export async function runAresPipeline(
   sessionId: string,
   userId: string,
   signal: BehavioralSignalInput
-): Promise<{ baselineResult: ScorerResult; mlResult: ScorerResult }> {
-  // 1. Evaluate models
+): Promise<{ baselineResult: ScorerResult; mlResult: ScorerResult; neuralResult: ScorerResult }> {
+  // 1. Evaluate all three models
   const baselineResult = evaluateBaselineRule(signal);
   const mlResult = evaluateMLModel(signal);
+  const neuralResult = evaluateNeuralModel(signal);
 
   // 2. Save Behavioral Event
   await prisma.behavioralEvent.create({
@@ -236,12 +295,30 @@ export async function runAresPipeline(
     },
   });
 
+  const neuralRiskEvent = await prisma.riskEvent.create({
+    data: {
+      sessionId,
+      modelUsed: "NEURAL_NET",
+      riskScore: neuralResult.riskScore,
+      trustScore: neuralResult.trustScore,
+      confidence: neuralResult.confidence,
+      signalsJson: neuralResult.signalsJson,
+      decision: neuralResult.decision,
+    },
+  });
+
   // 4. Update the Session state in the database
-  // Note: For Block D we use the ML Model as the active decision maker.
-  // In Block E, the Policy Engine will govern policy decisions explicitly.
+  // The Neural-Net Scorer is the active decision maker for session state transitions.
+  // All three models are evaluated and persisted for comparison, but the Neural-Net Scorer
+  // drives the active policy decisions.
   const oldSession = await prisma.session.findUnique({ where: { id: sessionId } });
   const fromState = oldSession?.state ?? "NORMAL";
-  const toState = mlResult.decision;
+  let toState = neuralResult.decision;
+
+  // Shadow absorbing invariant (I4): once in SHADOW, cannot transition back to NORMAL/STEP_UP/RESTRICTED
+  if (fromState === "SHADOW") {
+    toState = "SHADOW";
+  }
 
   if (fromState !== toState) {
     await prisma.session.update({
@@ -253,13 +330,13 @@ export async function runAresPipeline(
     await prisma.policyDecision.create({
       data: {
         sessionId,
-        riskEventId: mlRiskEvent.id,
+        riskEventId: neuralRiskEvent.id,
         fromState,
         toState,
-        reason: `ARES ML_MODEL evaluated riskScore = ${mlResult.riskScore} yielding ${toState}`,
+        reason: `ARES NEURAL_NET evaluated riskScore = ${neuralResult.riskScore} yielding ${toState}`,
       },
     });
   }
 
-  return { baselineResult, mlResult };
+  return { baselineResult, mlResult, neuralResult };
 }
