@@ -6,6 +6,7 @@ export interface BehavioralSignalInput {
   flightTimeMs?: number | null;
   typingSpeedCpm?: number | null;
   correctionRate?: number | null;
+  manualDuressSignal?: boolean | null;
   context?: {
     userAgent?: string;
     ipAddress?: string;
@@ -55,7 +56,13 @@ export function evaluateBaselineRule(signal: BehavioralSignalInput): ScorerResul
   let penaltyPoints = 0;
   const anomalies: string[] = [];
 
-  const { dwellTimeMs, flightTimeMs, typingSpeedCpm, correctionRate, context } = signal;
+  const { dwellTimeMs, flightTimeMs, typingSpeedCpm, correctionRate, context, manualDuressSignal } = signal;
+
+  // Rule E: Manual duress signal override (e.g., long-press gesture on login)
+  if (manualDuressSignal === true) {
+    penaltyPoints += 0.9;
+    anomalies.push("manual_duress");
+  }
 
   // Rule A: Excessive corrections (indicating high typing distress/jitters)
   if (correctionRate !== undefined && correctionRate !== null) {
@@ -116,7 +123,7 @@ export function evaluateBaselineRule(signal: BehavioralSignalInput): ScorerResul
 // Distance-based classifier (Z-score Mahalanobis metric approximation)
 // Maps multidimensional deviations into a logistic probability curve.
 export function evaluateMLModel(signal: BehavioralSignalInput): ScorerResult {
-  const { dwellTimeMs, flightTimeMs, typingSpeedCpm, correctionRate, context } = signal;
+  const { dwellTimeMs, flightTimeMs, typingSpeedCpm, correctionRate, context, manualDuressSignal } = signal;
 
   let totalSquaredDistance = 0;
   let featuresCount = 0;
@@ -165,7 +172,12 @@ export function evaluateMLModel(signal: BehavioralSignalInput): ScorerResult {
     }
   }
 
-  const finalMetric = distance + contextDistance;
+  let duressDistance = 0;
+  if (manualDuressSignal === true) {
+    duressDistance = 6.0;
+  }
+
+  const finalMetric = distance + contextDistance + duressDistance;
 
   // Sigmoid mapping: maps final distance metric into [0, 1] probability curve
   // Under normal variations (metric < 1.5), risk stays low (< 0.15)
@@ -192,7 +204,7 @@ export function evaluateMLModel(signal: BehavioralSignalInput): ScorerResult {
 // Pre-trained feedforward network: 6 → 16 (ReLU) → 8 (ReLU) → 1 (sigmoid)
 // Weights loaded from neural-weights.ts (trained on seeds 1000–1099, disjoint from eval seeds)
 export function evaluateNeuralModel(signal: BehavioralSignalInput): ScorerResult {
-  const { dwellTimeMs, flightTimeMs, typingSpeedCpm, correctionRate, context } = signal;
+  const { dwellTimeMs, flightTimeMs, typingSpeedCpm, correctionRate, context, manualDuressSignal } = signal;
 
   // Normalize features (same scheme as train-neural.ts)
   const dwellZ = ((dwellTimeMs ?? constLegitBaseline.dwellTimeMs.mean) / constLegitBaseline.dwellTimeMs.mean) - 1;
@@ -224,6 +236,11 @@ export function evaluateNeuralModel(signal: BehavioralSignalInput): ScorerResult
   // Output layer (Sigmoid)
   let z = layer3.biases[0];
   for (let i = 0; i < a2.length; i++) z += layer3.weights[0][i] * a2[i];
+
+  if (manualDuressSignal === true) {
+    z += 8.0;
+  }
+
   const riskScore = 1.0 / (1.0 + Math.exp(-z));
 
   const trustScore = 1.0 - riskScore;
@@ -308,12 +325,12 @@ export async function runAresPipeline(
   });
 
   // 4. Update the Session state in the database
-  // The Neural-Net Scorer is the active decision maker for session state transitions.
-  // All three models are evaluated and persisted for comparison, but the Neural-Net Scorer
+  // The ML Anomaly Classifier is the active decision maker for session state transitions.
+  // All three models are evaluated and persisted for comparison, but the ML Anomaly Classifier
   // drives the active policy decisions.
   const oldSession = await prisma.session.findUnique({ where: { id: sessionId } });
   const fromState = oldSession?.state ?? "NORMAL";
-  let toState = neuralResult.decision;
+  let toState = mlResult.decision;
 
   // Shadow absorbing invariant (I4): once in SHADOW, cannot transition back to NORMAL/STEP_UP/RESTRICTED
   if (fromState === "SHADOW") {
@@ -330,10 +347,10 @@ export async function runAresPipeline(
     await prisma.policyDecision.create({
       data: {
         sessionId,
-        riskEventId: neuralRiskEvent.id,
+        riskEventId: mlRiskEvent.id,
         fromState,
         toState,
-        reason: `ARES NEURAL_NET evaluated riskScore = ${neuralResult.riskScore} yielding ${toState}`,
+        reason: `ARES ML_MODEL evaluated riskScore = ${mlResult.riskScore} yielding ${toState}`,
       },
     });
   }

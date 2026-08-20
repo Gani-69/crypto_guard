@@ -158,9 +158,10 @@ model Order {
   coinId     String
   coin       Coin     @relation(fields: [coinId], references: [id])
   side       String   // OrderSide: BUY | SELL
-  type       String   // OrderType: MARKET | LIMIT
+  type       String   // OrderType: MARKET | LIMIT | STOP_LIMIT
   quantity   Float
   limitPrice Float?   // null for MARKET orders
+  stopPrice  Float?   // trigger price for STOP_LIMIT orders
   fillPrice  Float?
   status     String   @default("OPEN") // OrderStatus: OPEN | FILLED | CANCELLED
   isShadow   Boolean  @default(false) // denormalized from wallet for fast isolation checks/queries

@@ -21,6 +21,8 @@ interface AuthContextType {
   register: (email: string, password: string, displayName?: string) => Promise<void>;
   logout: () => Promise<void>;
   refreshSessionState: () => Promise<string>;
+  isUnlocked: boolean;
+  setIsUnlocked: (unlocked: boolean) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -30,6 +32,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isUnlocked, setIsUnlocked] = useState(false);
+
+  // Clear unlock state on logout
+  useEffect(() => {
+    if (!token) {
+      setIsUnlocked(false);
+    }
+  }, [token]);
 
   // Setup auth header on fetch calls
   useEffect(() => {
@@ -148,6 +158,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         register,
         logout,
         refreshSessionState,
+        isUnlocked,
+        setIsUnlocked,
       }}
     >
       {children}

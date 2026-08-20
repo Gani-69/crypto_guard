@@ -20,6 +20,7 @@ import {
   Sliders,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import * as api from '../api/client';
 import type { SimulationMode } from '../hooks/useKeystrokeBiometrics';
 import { formatPct } from '../types';
 import './Security.css';
@@ -43,6 +44,12 @@ export default function Security() {
   const [simMode, setSimMode] = useState<SimulationMode>('NONE');
   const [riskData, setRiskData] = useState<RiskData | null>(null);
   const [refreshing, setRefreshing] = useState(false);
+
+  // Tab control
+  const [activeTab, setActiveTab] = useState<'ARES' | 'ADMIN'>('ARES');
+  const [adminUsers, setAdminUsers] = useState<any[]>([]);
+  const [adminLogs, setAdminLogs] = useState<any[]>([]);
+  const [adminLoading, setAdminLoading] = useState(false);
 
   // Sync simulation mode with localStorage
   useEffect(() => {
@@ -69,6 +76,22 @@ export default function Security() {
     }
   };
 
+  const fetchAdminData = async () => {
+    try {
+      setAdminLoading(true);
+      const [usersRes, logsRes] = await Promise.all([
+        api.getAdminUsers(),
+        api.getAdminLogs()
+      ]);
+      setAdminUsers(usersRes.users || []);
+      setAdminLogs(logsRes.sessions || []);
+    } catch (err) {
+      console.error('Failed to fetch admin audit data:', err);
+    } finally {
+      setAdminLoading(false);
+    }
+  };
+
   useEffect(() => {
     fetchRiskData();
     // Auto refresh logs every 4 seconds to show live updates as user types
@@ -76,10 +99,19 @@ export default function Security() {
     return () => clearInterval(interval);
   }, []);
 
+  useEffect(() => {
+    if (activeTab === 'ADMIN') {
+      fetchAdminData();
+    }
+  }, [activeTab]);
+
   const handleManualRefresh = async () => {
     setRefreshing(true);
     await refreshSessionState();
     await fetchRiskData();
+    if (activeTab === 'ADMIN') {
+      await fetchAdminData();
+    }
   };
 
   // Compile history logs into chart dataset format
@@ -134,233 +166,364 @@ export default function Security() {
           <h1>ARES Security Dashboard</h1>
           <p className="text-secondary">Keystroke biometric telemetry and Policy Engine analytics</p>
         </div>
-        <button
-          className="btn btn-secondary security__refresh-btn"
-          onClick={handleManualRefresh}
-          disabled={refreshing}
-        >
-          <RefreshCw size={16} className={refreshing ? 'security__spin' : ''} />
-          Refresh Status
-        </button>
-      </div>
-
-      {/* ── Visual Risk Gauges ── */}
-      <div className="security__gauges-grid">
-        {/* Session State Card */}
-        <div className="security__gauge-card card flex-col items-center justify-center">
-          <div className="security__gauge-icon-wrap" style={{ color: activeColor, background: `${activeColor}15` }}>
-            {currentState === 'NORMAL' ? (
-              <ShieldCheck size={40} />
-            ) : currentState === 'SHADOW' ? (
-              <ShieldAlert size={40} />
-            ) : (
-              <Shield size={40} />
-            )}
+        <div className="flex items-center gap-md">
+          <div className="security__tab-toggle">
+            <button
+              className={`security__tab-toggle-btn ${activeTab === 'ARES' ? 'security__tab-toggle-btn--active' : ''}`}
+              onClick={() => setActiveTab('ARES')}
+            >
+              ARES Analytics
+            </button>
+            <button
+              className={`security__tab-toggle-btn ${activeTab === 'ADMIN' ? 'security__tab-toggle-btn--active' : ''}`}
+              onClick={() => setActiveTab('ADMIN')}
+            >
+              Platform Admin
+            </button>
           </div>
-          <span className="security__gauge-label">Session Access State</span>
-          <span className="security__gauge-value" style={{ color: activeColor }}>
-            {currentState}
-          </span>
-          <span className="security__gauge-desc text-center">
-            {currentState === 'NORMAL' && 'All trades and transfers are authenticated.'}
-            {currentState === 'STEP_UP' && 'Verifying identity. Secondary challenge requested.'}
-            {currentState === 'RESTRICTED' && 'High-risk detected. Selected functions gated.'}
-            {currentState === 'SHADOW' && 'Rubber-hose attack suspected. Displaying isolated decoy portfolio.'}
-          </span>
-        </div>
-
-        {/* ML Score Card */}
-        <div className="security__gauge-card card flex-col items-center justify-center">
-          <div className="security__dial-container">
-            <svg viewBox="0 0 100 100" className="security__dial-svg">
-              <circle cx="50" cy="50" r="40" className="security__dial-bg" />
-              <circle
-                cx="50"
-                cy="50"
-                r="40"
-                className="security__dial-progress"
-                style={{
-                  strokeDasharray: '251.2',
-                  strokeDashoffset: `${251.2 * (1 - mlScore)}`,
-                  stroke: mlScore > 0.8 ? 'var(--red-400)' : mlScore > 0.4 ? 'var(--amber-400)' : 'var(--green-400)',
-                }}
-              />
-            </svg>
-            <span className="security__dial-score">{Math.round(mlScore * 100)}%</span>
-          </div>
-          <span className="security__gauge-label">ML Model Risk Score</span>
-          <span className="security__gauge-desc">
-            Model Confidence: <strong>{formatPct(mlConfidence * 100)}</strong>
-          </span>
-        </div>
-
-        {/* Baseline Scorer Card */}
-        <div className="security__gauge-card card flex-col items-center justify-center">
-          <div className="security__dial-container">
-            <svg viewBox="0 0 100 100" className="security__dial-svg">
-              <circle cx="50" cy="50" r="40" className="security__dial-bg" />
-              <circle
-                cx="50"
-                cy="50"
-                r="40"
-                className="security__dial-progress"
-                style={{
-                  strokeDasharray: '251.2',
-                  strokeDashoffset: `${251.2 * (1 - bsScore)}`,
-                  stroke: bsScore > 0.8 ? 'var(--red-400)' : bsScore > 0.4 ? 'var(--amber-400)' : 'var(--green-400)',
-                }}
-              />
-            </svg>
-            <span className="security__dial-score">{Math.round(bsScore * 100)}%</span>
-          </div>
-          <span className="security__gauge-label">Baseline Rule Scorer</span>
-          <span className="security__gauge-desc">Static heuristic check policy</span>
+          <button
+            className="btn btn-secondary security__refresh-btn"
+            onClick={handleManualRefresh}
+            disabled={refreshing}
+          >
+            <RefreshCw size={16} className={refreshing ? 'security__spin' : ''} />
+            Refresh Status
+          </button>
         </div>
       </div>
 
-      <div className="security__main-layout">
-        {/* Left Side: Simulation settings & details */}
-        <div className="security__controls-side flex-col gap-lg">
-          {/* Simulation overrides */}
-          <div className="card security__control-panel">
-            <div className="security__section-title mb-md">
-              <Sliders size={18} className="text-cyan" />
-              <h2>Biometric Simulations</h2>
-            </div>
-            <p className="text-secondary mb-md" style={{ fontSize: '0.8rem' }}>
-              Select a behavioral profile to simulate adversarial attack patterns. ARES only evaluates when a simulation is active.
-            </p>
-            <div className="security__sim-options">
-              <button
-                type="button"
-                className={`security__sim-btn ${simMode === 'NONE' ? 'security__sim-btn--active' : ''}`}
-                onClick={() => handleModeChange('NONE')}
-              >
-                Off (Paused)
-              </button>
-              <button
-                type="button"
-                className={`security__sim-btn ${simMode === 'LEGITIMATE' ? 'security__sim-btn--active' : ''}`}
-                onClick={() => handleModeChange('LEGITIMATE')}
-              >
-                Legitimate Rhythm
-              </button>
-              <button
-                type="button"
-                className={`security__sim-btn ${simMode === 'COERCED_ANOMALOUS' ? 'security__sim-btn--active' : ''}`}
-                onClick={() => handleModeChange('COERCED_ANOMALOUS')}
-              >
-                Distressed / Coerced
-              </button>
-              <button
-                type="button"
-                className={`security__sim-btn ${simMode === 'CONTEXT_MISM' ? 'security__sim-btn--active' : ''}`}
-                onClick={() => handleModeChange('CONTEXT_MISM')}
-              >
-                Location Mismatch
-              </button>
+      {activeTab === 'ARES' ? (
+        <>
+          {/* ── Visual Risk Gauges ── */}
+          <div className="security__gauges-grid">
+            {/* Session State Card */}
+            <div className="security__gauge-card card flex-col items-center justify-center">
+              <div className="security__gauge-icon-wrap" style={{ color: activeColor, background: `${activeColor}15` }}>
+                {currentState === 'NORMAL' ? (
+                  <ShieldCheck size={40} />
+                ) : currentState === 'SHADOW' ? (
+                  <ShieldAlert size={40} />
+                ) : (
+                  <Shield size={40} />
+                )}
+              </div>
+              <span className="security__gauge-label">Session Access State</span>
+              <span className="security__gauge-value" style={{ color: activeColor }}>
+                {currentState}
+              </span>
+              <span className="security__gauge-desc text-center">
+                {currentState === 'NORMAL' && 'All trades and transfers are authenticated.'}
+                {currentState === 'STEP_UP' && 'Verifying identity. Secondary challenge requested.'}
+                {currentState === 'RESTRICTED' && 'High-risk detected. Selected functions gated.'}
+                {currentState === 'SHADOW' && 'Rubber-hose attack suspected. Displaying isolated decoy portfolio.'}
+              </span>
             </div>
 
-            <div className="security__info-alert mt-md">
-              <Info size={16} />
-              <p style={{ fontSize: '0.72rem', lineHeight: 1.4 }}>
-                <strong>How to test:</strong> Select <strong>Distressed / Coerced</strong> above, then navigate to Markets or Trading and type anything. ARES will evaluate the simulated signals and transition your session through STEP_UP → RESTRICTED → SHADOW. Select <strong>Off (Paused)</strong> to stop evaluations. Passcode for step-up recovery: <code style={{ background: 'rgba(255,255,255,0.08)', padding: '1px 5px', borderRadius: '4px', fontSize: '0.72rem' }}>123456</code>
-              </p>
-            </div>
-          </div>
-
-          {/* Policy Decision Timeline */}
-          <div className="card security__logs-panel">
-            <div className="security__section-title mb-md">
-              <History size={18} className="text-purple-400" />
-              <h2>Policy Decision Log</h2>
-            </div>
-            {riskData?.policyLogs.length === 0 ? (
-              <div className="security__logs-empty">
-                <p className="text-muted text-center" style={{ fontSize: '0.8rem' }}>No policy logs. Session is stable in normal mode.</p>
-              </div>
-            ) : (
-              <div className="security__timeline">
-                {riskData?.policyLogs.map((log) => {
-                  const stateColor = stateColors[log.toState] || 'var(--cyan-400)';
-                  return (
-                    <div key={log.id} className="security__timeline-item">
-                      <div className="security__timeline-dot" style={{ borderColor: stateColor, boxShadow: `0 0 8px ${stateColor}` }} />
-                      <div className="security__timeline-content">
-                        <span className="security__timeline-title">
-                          Transitioned <strong>{log.fromState}</strong> &rarr; <strong style={{ color: stateColor }}>{log.toState}</strong>
-                        </span>
-                        <p className="security__timeline-reason">{log.reason}</p>
-                        <span className="security__timeline-time">
-                          {new Date(log.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
-                        </span>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Right Side: Charts */}
-        <div className="security__chart-side card">
-          <div className="security__section-title mb-lg">
-            <Activity size={18} className="text-cyan" />
-            <h2>Live Session Risk Trajectory</h2>
-          </div>
-          <div className="security__chart-container">
-            {chartData.length === 0 ? (
-              <div className="security__chart-empty flex-col items-center justify-center">
-                <p className="text-muted text-center">No risk scoring log entries yet. Type key inputs anywhere to initialize telemetry data.</p>
-              </div>
-            ) : (
-              <ResponsiveContainer width="100%" height={360}>
-                <LineChart data={chartData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.06)" />
-                  <XAxis dataKey="time" stroke="var(--text-muted)" fontSize={11} tickLine={false} axisLine={false} />
-                  <YAxis
-                    stroke="var(--text-muted)"
-                    fontSize={11}
-                    tickLine={false}
-                    axisLine={false}
-                    domain={[0, 1]}
-                    tickFormatter={(v) => `${Math.round(v * 100)}%`}
-                    width={45}
-                  />
-                  <Tooltip
-                    contentStyle={{
-                      background: 'var(--bg-card)',
-                      border: '1px solid var(--border-default)',
-                      borderRadius: 'var(--radius-md)',
-                      color: 'var(--text-primary)',
-                      fontSize: '0.8rem',
-                      boxShadow: 'var(--shadow-lg)',
+            {/* ML Score Card */}
+            <div className="security__gauge-card card flex-col items-center justify-center">
+              <div className="security__dial-container">
+                <svg viewBox="0 0 100 100" className="security__dial-svg">
+                  <circle cx="50" cy="50" r="40" className="security__dial-bg" />
+                  <circle
+                    cx="50"
+                    cy="50"
+                    r="40"
+                    className="security__dial-progress"
+                    style={{
+                      strokeDasharray: '251.2',
+                      strokeDashoffset: `${251.2 * (1 - mlScore)}`,
+                      stroke: mlScore > 0.8 ? 'var(--red-400)' : mlScore > 0.4 ? 'var(--amber-400)' : 'var(--green-400)',
                     }}
                   />
-                  <Legend verticalAlign="top" height={36} iconType="circle" />
-                  <Line
-                    type="monotone"
-                    dataKey="ML Model"
-                    stroke="var(--cyan-400)"
-                    strokeWidth={2.5}
-                    dot={{ r: 3, stroke: 'var(--cyan-400)', strokeWidth: 1 }}
-                    activeDot={{ r: 5 }}
+                </svg>
+                <span className="security__dial-score">{Math.round(mlScore * 100)}%</span>
+              </div>
+              <span className="security__gauge-label">ML Model Risk Score</span>
+              <span className="security__gauge-desc">
+                Model Confidence: <strong>{formatPct(mlConfidence * 100)}</strong>
+              </span>
+            </div>
+
+            {/* Baseline Scorer Card */}
+            <div className="security__gauge-card card flex-col items-center justify-center">
+              <div className="security__dial-container">
+                <svg viewBox="0 0 100 100" className="security__dial-svg">
+                  <circle cx="50" cy="50" r="40" className="security__dial-bg" />
+                  <circle
+                    cx="50"
+                    cy="50"
+                    r="40"
+                    className="security__dial-progress"
+                    style={{
+                      strokeDasharray: '251.2',
+                      strokeDashoffset: `${251.2 * (1 - bsScore)}`,
+                      stroke: bsScore > 0.8 ? 'var(--red-400)' : bsScore > 0.4 ? 'var(--amber-400)' : 'var(--green-400)',
+                    }}
                   />
-                  <Line
-                    type="monotone"
-                    dataKey="Baseline Rule"
-                    stroke="var(--purple-400)"
-                    strokeWidth={1.5}
-                    strokeDasharray="4 4"
-                    dot={{ r: 2 }}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
+                </svg>
+                <span className="security__dial-score">{Math.round(bsScore * 100)}%</span>
+              </div>
+              <span className="security__gauge-label">Baseline Rule Scorer</span>
+              <span className="security__gauge-desc">Static heuristic check policy</span>
+            </div>
+          </div>
+
+          <div className="security__main-layout">
+            {/* Left Side: Simulation settings & details */}
+            <div className="security__controls-side flex-col gap-lg">
+              {/* Simulation overrides */}
+              <div className="card security__control-panel">
+                <div className="security__section-title mb-md">
+                  <Sliders size={18} className="text-cyan" />
+                  <h2>Biometric Simulations</h2>
+                </div>
+                <p className="text-secondary mb-md" style={{ fontSize: '0.8rem' }}>
+                  Select a behavioral profile to simulate adversarial attack patterns. ARES only evaluates when a simulation is active.
+                </p>
+                <div className="security__sim-options">
+                  <button
+                    type="button"
+                    className={`security__sim-btn ${simMode === 'NONE' ? 'security__sim-btn--active' : ''}`}
+                    onClick={() => handleModeChange('NONE')}
+                  >
+                    Off (Paused)
+                  </button>
+                  <button
+                    type="button"
+                    className={`security__sim-btn ${simMode === 'LEGITIMATE' ? 'security__sim-btn--active' : ''}`}
+                    onClick={() => handleModeChange('LEGITIMATE')}
+                  >
+                    Legitimate Rhythm
+                  </button>
+                  <button
+                    type="button"
+                    className={`security__sim-btn ${simMode === 'COERCED_ANOMALOUS' ? 'security__sim-btn--active' : ''}`}
+                    onClick={() => handleModeChange('COERCED_ANOMALOUS')}
+                  >
+                    Distressed / Coerced
+                  </button>
+                  <button
+                    type="button"
+                    className={`security__sim-btn ${simMode === 'CONTEXT_MISM' ? 'security__sim-btn--active' : ''}`}
+                    onClick={() => handleModeChange('CONTEXT_MISM')}
+                  >
+                    Location Mismatch
+                  </button>
+                </div>
+
+                <div className="security__info-alert mt-md">
+                  <Info size={16} />
+                  <p style={{ fontSize: '0.72rem', lineHeight: 1.4 }}>
+                    <strong>How to test:</strong> Select <strong>Distressed / Coerced</strong> above, then navigate to Markets or Trading and type anything. ARES will evaluate the simulated signals and transition your session through STEP_UP &rarr; RESTRICTED &rarr; SHADOW. Select <strong>Off (Paused)</strong> to stop evaluations. Passcode for step-up recovery: <code style={{ background: 'rgba(255,255,255,0.08)', padding: '1px 5px', borderRadius: '4px', fontSize: '0.72rem' }}>123456</code>
+                  </p>
+                </div>
+              </div>
+
+              {/* Policy Decision Timeline */}
+              <div className="card security__logs-panel">
+                <div className="security__section-title mb-md">
+                  <History size={18} className="text-purple-400" />
+                  <h2>Policy Decision Log</h2>
+                </div>
+                {riskData?.policyLogs.length === 0 ? (
+                  <div className="security__logs-empty">
+                    <p className="text-muted text-center" style={{ fontSize: '0.8rem' }}>No policy logs. Session is stable in normal mode.</p>
+                  </div>
+                ) : (
+                  <div className="security__timeline">
+                    {riskData?.policyLogs.map((log) => {
+                      const stateColor = stateColors[log.toState] || 'var(--cyan-400)';
+                      return (
+                        <div key={log.id} className="security__timeline-item">
+                          <div className="security__timeline-dot" style={{ borderColor: stateColor, boxShadow: `0 0 8px ${stateColor}` }} />
+                          <div className="security__timeline-content">
+                            <span className="security__timeline-title">
+                              Transitioned <strong>{log.fromState}</strong> &rarr; <strong style={{ color: stateColor }}>{log.toState}</strong>
+                            </span>
+                            <p className="security__timeline-reason">{log.reason}</p>
+                            <span className="security__timeline-time">
+                              {new Date(log.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Right Side: Charts */}
+            <div className="security__chart-side card">
+              <div className="security__section-title mb-lg">
+                <Activity size={18} className="text-cyan" />
+                <h2>Live Session Risk Trajectory</h2>
+              </div>
+              <div className="security__chart-container">
+                {chartData.length === 0 ? (
+                  <div className="security__chart-empty flex-col items-center justify-center">
+                    <p className="text-muted text-center">No risk scoring log entries yet. Type key inputs anywhere to initialize telemetry data.</p>
+                  </div>
+                ) : (
+                  <ResponsiveContainer width="100%" height={360}>
+                    <LineChart data={chartData}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.06)" />
+                      <XAxis dataKey="time" stroke="var(--text-muted)" fontSize={11} tickLine={false} axisLine={false} />
+                      <YAxis
+                        stroke="var(--text-muted)"
+                        fontSize={11}
+                        tickLine={false}
+                        axisLine={false}
+                        domain={[0, 1]}
+                        tickFormatter={(v) => `${Math.round(v * 100)}%`}
+                        width={45}
+                      />
+                      <Tooltip
+                        contentStyle={{
+                          background: 'var(--bg-card)',
+                          border: '1px solid var(--border-default)',
+                          borderRadius: 'var(--radius-md)',
+                          color: 'var(--text-primary)',
+                          fontSize: '0.8rem',
+                          boxShadow: 'var(--shadow-lg)',
+                        }}
+                      />
+                      <Legend verticalAlign="top" height={36} iconType="circle" />
+                      <Line
+                        type="monotone"
+                        dataKey="ML Model"
+                        stroke="var(--cyan-400)"
+                        strokeWidth={2.5}
+                        dot={{ r: 3, stroke: 'var(--cyan-400)', strokeWidth: 1 }}
+                        activeDot={{ r: 5 }}
+                      />
+                      <Line
+                        type="monotone"
+                        dataKey="Baseline Rule"
+                        stroke="var(--purple-400)"
+                        strokeWidth={1.5}
+                        strokeDasharray="4 4"
+                        dot={{ r: 2 }}
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+                )}
+              </div>
+            </div>
+          </div>
+        </>
+      ) : (
+        /* ── Administrative Panel ── */
+        <div className="security__admin-panel flex-col gap-lg fade-in">
+          {/* Registered Users List */}
+          <div className="card">
+            <div className="security__section-title mb-md">
+              <ShieldCheck size={18} className="text-cyan" />
+              <h2>Registered Platform Members</h2>
+            </div>
+            {adminLoading ? (
+              <p className="text-muted" style={{ padding: 20 }}>Loading members list...</p>
+            ) : adminUsers.length === 0 ? (
+              <p className="text-muted" style={{ padding: 20 }}>No members registered yet.</p>
+            ) : (
+              <div className="security__table-wrap">
+                <table className="security-table">
+                  <thead>
+                    <tr>
+                      <th>Display Name</th>
+                      <th>Email Address</th>
+                      <th>Registered At</th>
+                      <th>Wallets Linked</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {adminUsers.map((u) => (
+                      <tr key={u.id}>
+                        <td className="font-semibold text-primary">{u.displayName || 'No Name'}</td>
+                        <td>{u.email}</td>
+                        <td className="text-secondary">{new Date(u.createdAt).toLocaleDateString()} {new Date(u.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</td>
+                        <td>
+                          <div className="flex flex-col gap-xs" style={{ gap: 6 }}>
+                            {u.wallets.map((w: any, index: number) => (
+                              <div key={index} className="flex items-center gap-xs" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                <span className={`badge ${w.isShadow ? 'badge-purple' : 'badge-green'}`} style={{ fontSize: '0.65rem', padding: '1px 6px' }}>
+                                  {w.isShadow ? 'SHADOW DECOY' : 'AUTHENTIC'}
+                                </span>
+                                <code style={{ fontSize: '0.72rem', color: w.isShadow ? 'var(--purple-400)' : 'var(--cyan-400)' }}>{w.address}</code>
+                              </div>
+                            ))}
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+
+          {/* Session Security Logs */}
+          <div className="card">
+            <div className="security__section-title mb-md">
+              <Activity size={18} className="text-purple-400" />
+              <h2>Active Session Audit Trail</h2>
+            </div>
+            {adminLoading ? (
+              <p className="text-muted" style={{ padding: 20 }}>Loading audit logs...</p>
+            ) : adminLogs.length === 0 ? (
+              <p className="text-muted" style={{ padding: 20 }}>No sessions logged.</p>
+            ) : (
+              <div className="security__table-wrap">
+                <table className="security-table">
+                  <thead>
+                    <tr>
+                      <th>User Account</th>
+                      <th>Session ID</th>
+                      <th>Access State</th>
+                      <th>Client IP</th>
+                      <th>User Agent</th>
+                      <th>Last Activity</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {adminLogs.map((s) => {
+                      const isActive = !s.revokedAt && new Date(s.expiresAt) > new Date();
+                      const stateColor = stateColors[s.state] || 'var(--cyan-400)';
+                      return (
+                        <tr key={s.id}>
+                          <td className="font-semibold text-primary">{s.user.email}</td>
+                          <td>
+                            <code style={{ fontSize: '0.7rem' }} title={s.id}>{s.id.slice(0, 8)}...</code>
+                          </td>
+                          <td>
+                            <span className="badge" style={{ background: `${stateColor}15`, color: stateColor, border: `1px solid ${stateColor}30`, fontWeight: 700 }}>
+                              {s.state}
+                            </span>
+                          </td>
+                          <td className="text-secondary">{s.ipAddress || 'Unknown'}</td>
+                          <td className="text-secondary" style={{ fontSize: '0.72rem', maxWidth: 160, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={s.userAgent}>
+                            {s.userAgent || 'Unknown'}
+                          </td>
+                          <td>
+                            <div className="flex flex-col gap-xs" style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                              <span className="text-xs">
+                                {new Date(s.lastActivityAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                              </span>
+                              <span className={`badge ${isActive ? 'badge-green' : 'badge-red'}`} style={{ fontSize: '0.62rem', padding: '1px 5px', alignSelf: 'flex-start' }}>
+                                {isActive ? 'ACTIVE' : 'EXPIRED/LOGGED_OUT'}
+                              </span>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
             )}
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

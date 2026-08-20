@@ -94,4 +94,49 @@ router.post("/step-up", requireAuth as any, async (req: AuthenticatedRequest, re
   }
 });
 
+// GET /api/session/admin/users — returns list of all registered users
+router.get("/admin/users", requireAuth as any, async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const users = await prisma.user.findMany({
+      select: {
+        id: true,
+        email: true,
+        displayName: true,
+        createdAt: true,
+        wallets: {
+          select: {
+            address: true,
+            chain: true,
+            isShadow: true,
+          }
+        }
+      },
+      orderBy: { createdAt: "desc" },
+    });
+    res.json({ users });
+  } catch (err) {
+    console.error("[session] GET /admin/users error:", err);
+    res.status(500).json({ error: "internal_error" });
+  }
+});
+
+// GET /api/session/admin/logs — returns audit log of all active and inactive sessions
+router.get("/admin/logs", requireAuth as any, async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const sessions = await prisma.session.findMany({
+      include: {
+        user: {
+          select: { email: true, displayName: true }
+        }
+      },
+      orderBy: { createdAt: "desc" },
+      take: 100, // Cap at 100 logs
+    });
+    res.json({ sessions });
+  } catch (err) {
+    console.error("[session] GET /admin/logs error:", err);
+    res.status(500).json({ error: "internal_error" });
+  }
+});
+
 export default router;

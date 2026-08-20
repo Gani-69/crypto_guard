@@ -80,28 +80,28 @@ export function useDebounce<T>(value: T, delay: number = 300): T {
 }
 
 // ── Wallet Data ──
-export function useWallet() {
+export function useWallet(decoy?: boolean) {
   const { data, loading, error, refetch } = useFetch<WalletData>(
-    () => api.getWallet(),
-    []
+    () => api.getWallet(decoy),
+    [decoy]
   );
   return { walletData: data, loading, error, refetch };
 }
 
 // ── Transactions ──
-export function useTransactions(limit?: number) {
+export function useTransactions(limit?: number, decoy?: boolean) {
   const { data, loading, error, refetch } = useFetch(
-    () => api.getTransactions(limit),
-    [limit]
+    () => api.getTransactions(limit, decoy),
+    [limit, decoy]
   );
   return { transactions: data?.transactions ?? [] as Transaction[], loading, error, refetch };
 }
 
 // ── Orders ──
-export function useOrders(params?: { limit?: number; status?: string }) {
+export function useOrders(params?: { limit?: number; status?: string; decoy?: boolean }) {
   const { data, loading, error, refetch } = useFetch(
     () => api.getOrders(params),
-    [params?.limit, params?.status]
+    [params?.limit, params?.status, params?.decoy]
   );
   return { orders: data?.orders ?? [] as Order[], loading, error, refetch };
 }

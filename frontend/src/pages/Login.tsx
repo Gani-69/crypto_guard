@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { Shield, AlertCircle, ArrowRight } from 'lucide-react';
 import './Login.css';
@@ -12,6 +12,24 @@ export default function Login() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
+
+  const [isDuress, setIsDuress] = useState(false);
+  const duressRef = useRef<any>(null);
+  const DURESS_HOLD_MS = 2000;
+
+  const handlePointerDown = () => {
+    duressRef.current = setTimeout(() => {
+      setIsDuress(true);
+      console.log('[ARES] Discreet manual duress gesture activated.');
+    }, DURESS_HOLD_MS);
+  };
+
+  const handlePointerUp = () => {
+    if (duressRef.current) {
+      clearTimeout(duressRef.current);
+      duressRef.current = null;
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -32,6 +50,7 @@ export default function Login() {
           flightTimeMs: 170,
           typingSpeedCpm: 230,
           correctionRate: 0.04,
+          manualDuressSignal: isDuress,
         };
         await login(email, password, signal);
       }
@@ -46,7 +65,13 @@ export default function Login() {
     <div className="login-page fade-in">
       <div className="login-box card-glass">
         <div className="login-box__header">
-          <div className="login-box__logo">
+          <div
+            className="login-box__logo"
+            style={{ cursor: 'pointer', userSelect: 'none' }}
+            onPointerDown={handlePointerDown}
+            onPointerUp={handlePointerUp}
+            onPointerLeave={handlePointerUp}
+          >
             <Shield size={32} />
           </div>
           <h1>CryptoGuard</h1>
@@ -61,6 +86,7 @@ export default function Login() {
               setIsRegister(false);
               setError(null);
               setSuccessMsg(null);
+              setIsDuress(false);
             }}
           >
             Sign In
@@ -72,6 +98,7 @@ export default function Login() {
               setIsRegister(true);
               setError(null);
               setSuccessMsg(null);
+              setIsDuress(false);
             }}
           >
             Register

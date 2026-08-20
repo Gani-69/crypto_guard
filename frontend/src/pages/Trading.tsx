@@ -1,32 +1,43 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useCoins, useOrders, useWallet } from '../hooks/useMarketData';
-import { formatUsd } from '../types';
+import { formatUsd, formatPct } from '../types';
 import * as api from '../api/client';
-import { AlertCircle, X } from 'lucide-react';
+import { AlertCircle, X, ArrowUpRight, ArrowDownLeft } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 import './Trading.css';
 
 export default function Trading() {
+  const { isUnlocked } = useAuth();
+  const decoyMode = !isUnlocked;
+
   const [searchParams] = useSearchParams();
   const symbolParam = searchParams.get('symbol');
   const sideParam = searchParams.get('side');
 
   const { coins, loading: coinsLoading } = useCoins({ limit: 100 } as any);
-  const { orders, loading: ordersLoading, refetch: refetchOrders } = useOrders();
-  const { walletData, refetch: refetchWallet } = useWallet();
+  const { orders, loading: ordersLoading, refetch: refetchOrders } = useOrders({ decoy: decoyMode });
+  const { walletData, refetch: refetchWallet } = useWallet(decoyMode);
 
   // Form states
   const [selectedCoinId, setSelectedCoinId] = useState('');
   const [side, setSide] = useState<'BUY' | 'SELL'>('BUY');
-  const [type, setType] = useState<'MARKET' | 'LIMIT'>('MARKET');
+  const [type, setType] = useState<'MARKET' | 'LIMIT' | 'STOP_LIMIT'>('MARKET');
   const [quantity, setQuantity] = useState<number | ''>('');
   const [limitPrice, setLimitPrice] = useState<number | ''>('');
+  const [stopPrice, setStopPrice] = useState<number | ''>('');
 
   // Execution states
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
 
-  // Set default form values from query parameters or coins list
+  // Simulated Order Book bids and asks
+  const [bids, setBids] = useState<Array<{ price: number; qty: number }>>([]);
+  const [asks, setAsks] = useState<Array<{ price: number; qty: number }>>([]);
+
+  const selectedCoin = coins.find((c) => c.id === selectedCoinId);
+
+  // Sync symbol query parameters
   useEffect(() => {
     if (coins.length > 0) {
       if (symbolParam) {
@@ -44,18 +55,69 @@ export default function Trading() {
     }
   }, [sideParam]);
 
-  const selectedCoin = coins.find((c) => c.id === selectedCoinId);
-
-  // Auto-fill limit price with current price when switching to LIMIT
+  // Autofill limit price when switching type
   useEffect(() => {
-    if (type === 'LIMIT' && selectedCoin && !limitPrice) {
+    if ((type === 'LIMIT' || type === 'STOP_LIMIT') && selectedCoin && !limitPrice) {
       setLimitPrice(Number(selectedCoin.priceUsd.toFixed(2)));
     }
-  }, [type, selectedCoin, limitPrice]);
+    if (type === 'STOP_LIMIT' && selectedCoin && !stopPrice) {
+      setStopPrice(Number((selectedCoin.priceUsd * 0.99).toFixed(2)));
+    }
+  }, [type, selectedCoin, limitPrice, stopPrice]);
 
-  // Calculate estimated total
-  const priceToUse = type === 'MARKET' ? (selectedCoin?.priceUsd ?? 0) : Number(limitPrice || 0);
-  const estTotal = priceToUse * (Number(quantity) || 0);
+  // Simulate dynamic Order Book fluctuations
+  useEffect(() => {
+    if (!selectedCoin) return;
+    const basePrice = selectedCoin.priceUsd;
+
+    const generateInitialBook = () => {
+      const tempAsks = [];
+      const tempBids = [];
+      for (let i = 1; i <= 5; i++) {
+        tempAsks.push({
+          price: basePrice * (1 + (i * 0.0006) + (Math.random() - 0.5) * 0.0002),
+          qty: Math.random() * 1.8 + 0.05,
+        });
+        tempBids.push({
+          price: basePrice * (1 - (i * 0.0006) + (Math.random() - 0.5) * 0.0002),
+          qty: Math.random() * 1.8 + 0.05,
+        });
+      }
+      setAsks(tempAsks.sort((a, b) => a.price - b.price));
+      setBids(tempBids.sort((a, b) => b.price - a.price));
+    };
+
+    generateInitialBook();
+
+    const interval = setInterval(() => {
+      setAsks((prev) =>
+        prev
+          .map((item) => ({
+            price: item.price * (1 + (Math.random() - 0.5) * 0.00008),
+            qty: Math.max(0.005, item.qty + (Math.random() - 0.5) * 0.12),
+          }))
+          .sort((a, b) => a.price - b.price)
+      );
+
+      setBids((prev) =>
+        prev
+          .map((item) => ({
+            price: item.price * (1 + (Math.random() - 0.5) * 0.00008),
+            qty: Math.max(0.005, item.qty + (Math.random() - 0.5) * 0.12),
+          }))
+          .sort((a, b) => b.price - a.price)
+      );
+    }, 1500);
+
+    return () => clearInterval(interval);
+  }, [selectedCoinId, selectedCoin]);
+
+  const handleOrderBookClick = (price: number, qty: number, clickSide: 'BUY' | 'SELL') => {
+    setSide(clickSide === 'BUY' ? 'SELL' : 'BUY'); // Counterparty action
+    setLimitPrice(Number(price.toFixed(2)));
+    setQuantity(Number(qty.toFixed(4)));
+    if (type === 'MARKET') setType('LIMIT');
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -70,12 +132,17 @@ export default function Trading() {
         side,
         type,
         quantity: Number(quantity),
-        limitPrice: type === 'LIMIT' ? Number(limitPrice) : undefined,
+        limitPrice: type === 'LIMIT' || type === 'STOP_LIMIT' ? Number(limitPrice) : undefined,
+        stopPrice: type === 'STOP_LIMIT' ? Number(stopPrice) : undefined,
+        decoy: decoyMode,
       });
 
       setMessage({ text: res.message, type: 'success' });
       setQuantity('');
-      if (type === 'MARKET') setLimitPrice('');
+      if (type === 'MARKET') {
+        setLimitPrice('');
+        setStopPrice('');
+      }
       refetchOrders();
       refetchWallet();
     } catch (err: any) {
@@ -87,7 +154,7 @@ export default function Trading() {
 
   const handleCancelOrder = async (orderId: string) => {
     try {
-      await api.cancelOrder(orderId);
+      await api.cancelOrder(orderId, decoyMode);
       setMessage({ text: 'Order cancelled successfully', type: 'success' });
       refetchOrders();
       refetchWallet();
@@ -96,23 +163,104 @@ export default function Trading() {
     }
   };
 
-  // Find asset balance in wallet holdings
-  const currentAssetHolding = walletData?.holdings.find(h => h.coinId === selectedCoinId);
+  const priceToUse = type === 'MARKET' ? (selectedCoin?.priceUsd ?? 0) : Number(limitPrice || 0);
+  const estTotal = priceToUse * (Number(quantity) || 0);
+
+  const currentAssetHolding = walletData?.holdings.find((h) => h.coinId === selectedCoinId);
   const maxAvailable = currentAssetHolding?.amount ?? 0;
 
   return (
     <div className="trading fade-in">
-      <div className="trading__header">
-        <h1>Simulated Trading</h1>
-        <p className="text-secondary">Execute MARKET and LIMIT orders without real capital risks</p>
-      </div>
+      {/* ── Active Asset Stats Header Bar ── */}
+      {selectedCoin && (
+        <div className="trading__asset-bar card">
+          <div className="trading__asset-info">
+            <span className="trading__asset-symbol">{selectedCoin.symbol} / INR</span>
+            <span className="trading__asset-price">{formatUsd(selectedCoin.priceUsd)}</span>
+            <span className={`trading__asset-change ${(selectedCoin.change24hPct ?? 0) >= 0 ? 'text-green' : 'text-red'}`}>
+              {formatPct(selectedCoin.change24hPct)}
+            </span>
+          </div>
+          <div className="trading__asset-stats">
+            <div className="trading__stat-item">
+              <span className="trading__stat-label">24h High</span>
+              <span className="trading__stat-value">{formatUsd(selectedCoin.priceUsd * 1.03)}</span>
+            </div>
+            <div className="trading__stat-item">
+              <span className="trading__stat-label">24h Low</span>
+              <span className="trading__stat-value">{formatUsd(selectedCoin.priceUsd * 0.97)}</span>
+            </div>
+            <div className="trading__stat-item">
+              <span className="trading__stat-label">24h Volume</span>
+              <span className="trading__stat-value">{formatUsd(selectedCoin.volume24hUsd ?? 0, true)}</span>
+            </div>
+          </div>
+        </div>
+      )}
 
+      {/* ── Monolithic Trade Grid ── */}
+      <div className="trading__main-grid">
+        {/* Left Column: Live Order Book */}
+        <div className="trading__book card">
+          <h3 className="trading__title">Order Book</h3>
+          <div className="trading__book-headers">
+            <span>Price (INR)</span>
+            <span style={{ textAlign: 'right' }}>Size ({selectedCoin?.symbol})</span>
+            <span style={{ textAlign: 'right' }}>Total (INR)</span>
+          </div>
 
+          {/* Asks (Sells) */}
+          <div className="trading__book-section trading__book-section--asks">
+            {asks.slice().reverse().map((ask, idx) => {
+              const depthPct = Math.min(100, (ask.qty / 2.5) * 100);
+              return (
+                <div
+                  key={idx}
+                  className="trading__book-row trading__book-row--ask"
+                  onClick={() => handleOrderBookClick(ask.price, ask.qty, 'SELL')}
+                  style={{ background: `linear-gradient(270deg, rgba(244, 67, 54, 0.08) ${depthPct}%, transparent 0%)` }}
+                >
+                  <span className="text-red font-mono">{formatUsd(ask.price)}</span>
+                  <span style={{ textAlign: 'right' }} className="font-mono">{ask.qty.toFixed(4)}</span>
+                  <span style={{ textAlign: 'right' }} className="font-mono text-secondary">{formatUsd(ask.price * ask.qty)}</span>
+                </div>
+              );
+            })}
+          </div>
 
-      <div className="trading__grid">
-        {/* ── Order Form ── */}
+          {/* Index Price */}
+          {selectedCoin && (
+            <div className="trading__book-index">
+              <span className={`trading__index-price ${(selectedCoin.change24hPct ?? 0) >= 0 ? 'text-green' : 'text-red'}`}>
+                {formatUsd(selectedCoin.priceUsd)}
+                {(selectedCoin.change24hPct ?? 0) >= 0 ? <ArrowUpRight size={14} /> : <ArrowDownLeft size={14} />}
+              </span>
+            </div>
+          )}
+
+          {/* Bids (Buys) */}
+          <div className="trading__book-section trading__book-section--bids">
+            {bids.map((bid, idx) => {
+              const depthPct = Math.min(100, (bid.qty / 2.5) * 100);
+              return (
+                <div
+                  key={idx}
+                  className="trading__book-row trading__book-row--bid"
+                  onClick={() => handleOrderBookClick(bid.price, bid.qty, 'BUY')}
+                  style={{ background: `linear-gradient(270deg, rgba(3, 197, 139, 0.08) ${depthPct}%, transparent 0%)` }}
+                >
+                  <span className="text-green font-mono">{formatUsd(bid.price)}</span>
+                  <span style={{ textAlign: 'right' }} className="font-mono">{bid.qty.toFixed(4)}</span>
+                  <span style={{ textAlign: 'right' }} className="font-mono text-secondary">{formatUsd(bid.price * bid.qty)}</span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Center Column: Place Order Form */}
         <div className="trading__form-container card">
-          <h2>Place Order</h2>
+          <h3 className="trading__title">Order Placement</h3>
           <form onSubmit={handleSubmit} className="trading__form">
             {/* Side selector */}
             <div className="trading__tab-selector">
@@ -134,7 +282,7 @@ export default function Trading() {
 
             {/* Asset selector */}
             <div className="trading__field">
-              <label htmlFor="coin-select">Asset</label>
+              <label htmlFor="coin-select">Asset Pair</label>
               <select
                 id="coin-select"
                 value={selectedCoinId}
@@ -149,11 +297,11 @@ export default function Trading() {
               </select>
             </div>
 
-            {/* Balances detail */}
+            {/* Available balance */}
             {selectedCoin && (
               <div className="trading__balance-info">
-                <span>Available:</span>
-                <span className="font-semibold">
+                <span>Holdings:</span>
+                <span className="font-semibold text-cyan">
                   {maxAvailable.toLocaleString(undefined, { maximumFractionDigits: 6 })} {selectedCoin.symbol}
                 </span>
               </div>
@@ -167,15 +315,33 @@ export default function Trading() {
                 value={type}
                 onChange={(e) => setType(e.target.value as any)}
               >
-                <option value="MARKET">Market</option>
-                <option value="LIMIT">Limit</option>
+                <option value="MARKET">Market Order</option>
+                <option value="LIMIT">Limit Order</option>
+                <option value="STOP_LIMIT">Stop-Loss Limit</option>
               </select>
             </div>
 
-            {/* Limit Price */}
-            {type === 'LIMIT' && (
+            {/* Stop Price */}
+            {type === 'STOP_LIMIT' && (
               <div className="trading__field">
-                <label htmlFor="limit-price-input">Limit Price (USD)</label>
+                <label htmlFor="stop-price-input">Stop Price (INR)</label>
+                <input
+                  id="stop-price-input"
+                  type="number"
+                  step="any"
+                  min="0.000001"
+                  placeholder="Stop Price (Trigger)"
+                  value={stopPrice}
+                  onChange={(e) => setStopPrice(e.target.value === '' ? '' : Number(e.target.value))}
+                  required
+                />
+              </div>
+            )}
+
+            {/* Limit Price */}
+            {(type === 'LIMIT' || type === 'STOP_LIMIT') && (
+              <div className="trading__field">
+                <label htmlFor="limit-price-input">Limit Price (INR)</label>
                 <input
                   id="limit-price-input"
                   type="number"
@@ -209,7 +375,7 @@ export default function Trading() {
               </div>
             </div>
 
-            {/* Sell Max Helper */}
+            {/* Max helper */}
             {side === 'SELL' && maxAvailable > 0 && (
               <button
                 type="button"
@@ -223,11 +389,11 @@ export default function Trading() {
             {/* Order estimates */}
             <div className="trading__estimates">
               <div className="trading__estimate-row">
-                <span>Price per asset:</span>
+                <span>Est Price:</span>
                 <span className="font-semibold">{formatUsd(priceToUse)}</span>
               </div>
               <div className="trading__estimate-row trading__estimate-row--total">
-                <span>Estimated Cost:</span>
+                <span>Total Value:</span>
                 <span className="font-bold text-cyan">{formatUsd(estTotal)}</span>
               </div>
             </div>
@@ -235,56 +401,27 @@ export default function Trading() {
             {/* Submit */}
             <button
               type="submit"
-              className={`btn btn-primary trading__submit-btn ${side === 'SELL' ? 'btn-danger' : 'btn-success'}`}
-              disabled={loading || !quantity || (type === 'LIMIT' && !limitPrice)}
+              className={`btn trading__submit-btn ${side === 'SELL' ? 'btn-danger' : 'btn-success'}`}
+              disabled={loading || !quantity || ((type === 'LIMIT' || type === 'STOP_LIMIT') && !limitPrice) || (type === 'STOP_LIMIT' && !stopPrice)}
             >
               {loading ? 'Processing...' : `${side} ${selectedCoin?.symbol ?? ''}`}
             </button>
 
-            {/* Status alerts */}
+            {/* Alerts */}
             {message && (
               <div className={`trading__alert trading__alert--${message.type}`}>
-                <AlertCircle size={16} />
+                <AlertCircle size={14} />
                 <span>{message.text}</span>
               </div>
             )}
           </form>
         </div>
 
-        {/* ── Order History / Open Orders ── */}
+        {/* Right Column: Order History */}
         <div className="trading__history card">
-          <h2>Order History</h2>
+          <h3 className="trading__title">Order History</h3>
           {ordersLoading && orders.length === 0 ? (
-            <div className="trading__table-wrap" style={{ marginTop: 12 }}>
-              <table className="trading-table">
-                <thead>
-                  <tr>
-                    <th>Date</th>
-                    <th>Type</th>
-                    <th>Side</th>
-                    <th>Asset</th>
-                    <th style={{ textAlign: 'right' }}>Qty</th>
-                    <th style={{ textAlign: 'right' }}>Price</th>
-                    <th>Status</th>
-                    <th>Action</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {Array.from({ length: 4 }).map((_, i) => (
-                    <tr key={i}>
-                      <td><div className="skeleton" style={{ height: 14, width: 70 }} /></td>
-                      <td><div className="skeleton" style={{ height: 18, width: 48, borderRadius: 4 }} /></td>
-                      <td><div className="skeleton" style={{ height: 18, width: 38, borderRadius: 4 }} /></td>
-                      <td><div className="skeleton" style={{ height: 16, width: 32 }} /></td>
-                      <td style={{ textAlign: 'right' }}><div className="skeleton" style={{ height: 16, width: 60, marginLeft: 'auto' }} /></td>
-                      <td style={{ textAlign: 'right' }}><div className="skeleton" style={{ height: 16, width: 70, marginLeft: 'auto' }} /></td>
-                      <td><div className="skeleton" style={{ height: 18, width: 56, borderRadius: 99 }} /></td>
-                      <td><div className="skeleton" style={{ height: 16, width: 16 }} /></td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <p className="text-muted" style={{ padding: 20 }}>Loading orders...</p>
           ) : orders.length === 0 ? (
             <div className="trading__empty">
               <p className="text-muted">No orders submitted yet.</p>
@@ -311,7 +448,7 @@ export default function Trading() {
                     const isOpen = o.status === 'OPEN';
                     return (
                       <tr key={o.id}>
-                        <td className="text-muted" style={{ fontSize: '0.75rem' }}>
+                        <td className="text-secondary" style={{ fontSize: '0.75rem' }}>
                           {new Date(o.createdAt).toLocaleDateString()}
                         </td>
                         <td>

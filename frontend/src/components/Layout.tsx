@@ -9,7 +9,7 @@ import {
   Shield,
   ShieldAlert,
   Search,
-  Bell,
+  LogOut,
   Menu,
   X,
 } from 'lucide-react';
@@ -33,7 +33,7 @@ export default function Layout() {
   // Activate keystroke telemetry monitoring
   useKeystrokeBiometrics();
 
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const navigate = useNavigate();
 
@@ -93,10 +93,10 @@ export default function Layout() {
 
   // Dynamic state status color maps
   const stateLabels: Record<string, string> = {
-    NORMAL: 'Shield Active',
-    STEP_UP: 'Step-up Challenge Requested',
-    RESTRICTED: 'Session Suspended',
-    SHADOW: 'Decoy Active',
+    NORMAL: 'Secure',
+    STEP_UP: 'Verification Required',
+    RESTRICTED: 'Suspended',
+    SHADOW: 'Decoy Mode Active',
   };
 
   const stateColors: Record<string, string> = {
@@ -107,100 +107,117 @@ export default function Layout() {
   };
 
   const stateDotColor = stateColors[sessionState] || 'var(--green-400)';
-  const stateLabelText = stateLabels[sessionState] || 'Shield Active';
+  const stateLabelText = stateLabels[sessionState] || 'Secure';
 
   return (
-    <div className="layout">
-      {/* Mobile overlay */}
-      {sidebarOpen && (
-        <div className="sidebar-overlay" onClick={() => setSidebarOpen(false)} />
-      )}
-
-      {/* Sidebar */}
-      <aside className={`sidebar ${sidebarOpen ? 'sidebar--open' : ''}`}>
-        <div className="sidebar__header">
-          <div className="sidebar__logo">
-            <div className="sidebar__logo-icon">
-              <Shield size={22} />
+    <div className="layout-horizontal">
+      {/* ── Top Header Navigation Bar ── */}
+      <header className="navbar">
+        <div className="navbar__container">
+          {/* Logo */}
+          <div className="navbar__brand">
+            <div className="navbar__logo-icon">
+              <Shield size={20} />
             </div>
             <div>
-              <h1 className="sidebar__title">CryptoGuard</h1>
-              <span className="sidebar__subtitle">Adaptive Security</span>
+              <span className="navbar__title">CryptoGuard</span>
+              <span className="navbar__badge">DCX PRO</span>
             </div>
           </div>
-          <button className="sidebar__close" onClick={() => setSidebarOpen(false)}>
-            <X size={20} />
-          </button>
-        </div>
 
-        <nav className="sidebar__nav">
-          {NAV_ITEMS.map((item) => (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              className={({ isActive }) =>
-                `sidebar__link ${isActive ? 'sidebar__link--active' : ''}`
-              }
-              onClick={() => setSidebarOpen(false)}
-              end={item.to === '/'}
-            >
-              <item.icon size={18} />
-              <span>{item.label}</span>
-            </NavLink>
-          ))}
-        </nav>
+          {/* Desktop Nav Links */}
+          <nav className="navbar__nav">
+            {NAV_ITEMS.map((item) => (
+              <NavLink
+                key={item.to}
+                to={item.to}
+                className={({ isActive }) =>
+                  `navbar__link ${isActive ? 'navbar__link--active' : ''}`
+                }
+                end={item.to === '/'}
+              >
+                <item.icon size={16} />
+                <span>{item.label}</span>
+              </NavLink>
+            ))}
+          </nav>
 
-        <div className="sidebar__footer">
-          <div className="sidebar__status" title={`Current session security status: ${sessionState}`}>
-            <div className="sidebar__status-dot" style={{ background: stateDotColor, boxShadow: `0 0 8px ${stateDotColor}` }} />
-            <span>{stateLabelText}</span>
-          </div>
-          <div className="sidebar__telemetry" title="ARES Continuous Biometric Telemetry Active">
-            <div className="telemetry-pulse-dot" />
-            <span>ARES Telemetry Active</span>
-          </div>
-        </div>
-      </aside>
-
-      {/* Main */}
-      <div className="main">
-        {/* Header */}
-        <header className="header">
-          <button className="header__menu" onClick={() => setSidebarOpen(true)}>
-            <Menu size={22} />
-          </button>
-
-          <form className="header__search" onSubmit={handleSearch}>
-            <Search size={16} className="header__search-icon" />
+          {/* Search bar */}
+          <form className="navbar__search" onSubmit={handleSearch}>
+            <Search size={14} className="navbar__search-icon" />
             <input
               id="global-search"
               type="text"
-              placeholder="Search coins..."
+              placeholder="Search assets..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="header__search-input"
+              className="navbar__search-input"
             />
           </form>
 
-          <div className="header__actions">
-            <button className="header__action-btn" title="Notifications">
-              <Bell size={18} />
+          {/* Security & User Actions */}
+          <div className="navbar__actions">
+            {/* Security Indicator */}
+            <div className="navbar__status" title={`Security status: ${sessionState}`}>
+              <div className="navbar__status-dot" style={{ background: stateDotColor, boxShadow: `0 0 8px ${stateDotColor}` }} />
+              <span style={{ color: stateDotColor }}>{stateLabelText}</span>
+            </div>
+
+            {/* Telemetry pulse */}
+            <div className="navbar__telemetry" title="ARES Biometric Telemetry Live">
+              <div className="telemetry-pulse-dot" />
+              <span>LIVE</span>
+            </div>
+
+            {/* Logout button */}
+            <button className="navbar__logout-btn" onClick={logout} title="Log out safely">
+              <LogOut size={16} />
             </button>
-            <div
-              className="header__avatar"
-              title={`Logged in as ${user?.displayName || user?.email || 'User'}. Click to logout.`}
-              onClick={logout}
-            >
-              <span>{(user?.displayName || user?.email || 'D')[0].toUpperCase()}</span>
+            
+            {/* Avatar */}
+            <div className="navbar__avatar" title={`Logged in as ${user?.displayName || user?.email}`}>
+              <span>{(user?.displayName || user?.email || 'U')[0].toUpperCase()}</span>
+            </div>
+
+            {/* Mobile Hamburger menu icon */}
+            <button className="navbar__hamburger" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
+              {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
+            </button>
+          </div>
+        </div>
+
+        {/* Mobile Nav Links Panel */}
+        {mobileMenuOpen && (
+          <div className="navbar__mobile-menu">
+            <div className="navbar__mobile-links">
+              {NAV_ITEMS.map((item) => (
+                <NavLink
+                  key={item.to}
+                  to={item.to}
+                  className={({ isActive }) =>
+                    `navbar__mobile-link ${isActive ? 'navbar__mobile-link--active' : ''}`
+                  }
+                  onClick={() => setMobileMenuOpen(false)}
+                  end={item.to === '/'}
+                >
+                  <item.icon size={18} />
+                  <span>{item.label}</span>
+                </NavLink>
+              ))}
+              <button className="navbar__mobile-logout" onClick={() => { logout(); setMobileMenuOpen(false); }}>
+                <LogOut size={18} />
+                <span>Logout</span>
+              </button>
             </div>
           </div>
-        </header>
+        )}
+      </header>
 
-        {/* Content */}
-        <main className="content">
-          <Outlet />
-        </main>
-      </div>
+      {/* ── Main Content Area ── */}
+      <main className="navbar__content">
+        <Outlet />
+      </main>
+
       {/* Step Up Verification Modal */}
       {(sessionState === 'STEP_UP' || sessionState === 'RESTRICTED') && (
         <div className="security-modal-overlay">

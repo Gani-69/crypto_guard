@@ -194,6 +194,7 @@ The Neural-Net Scorer successfully bridges this gap, achieving perfect classific
 * **Rubber-Hose Cryptanalysis:** If an adversary is aware that a Shadow State exists, they can force the user to produce proof of authentic funds (e.g., verifying balances on-chain using an external block explorer).
 * **Cold-Start Latency:** New users lack a mature behavioral baseline. During the initial training phase, the system must fallback onto contextual risk rules (location, network, and device profiles).
 * **Synthetic Bounds:** Real human typing biometrics under coercion may exhibit different variations than simulated Gaussian distributions. Real-world training datasets are necessary to validate these boundaries.
+* **Model Fitting to Synthetic Distribution:** The pre-trained Neural-Net Scorer's near-perfect metrics (100.00% accuracy, precision, and recall) reflect close fitting to the synthetic generator's own distribution family (25,000 training samples drawn from the same generator family as the evaluation set). This is not unqualified evidence of clean generalization to real human behavioral drift, which exhibits far more unpredictable variance.
 
 ---
 

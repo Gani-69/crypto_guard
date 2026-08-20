@@ -5,10 +5,10 @@ import { requireAuth, AuthenticatedRequest } from "../middleware/auth.middleware
 
 const router = Router();
 
-// POST /api/trading/orders — place BUY/SELL, MARKET/LIMIT
+// POST /api/trading/orders — place BUY/SELL, MARKET/LIMIT/STOP_LIMIT
 router.post("/orders", requireAuth as any, async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const { coinId, side, type, quantity, limitPrice } = req.body;
+    const { coinId, side, type, quantity, limitPrice, stopPrice, decoy } = req.body;
     const user = req.user!;
     const session = req.session!;
 
@@ -25,8 +25,8 @@ router.post("/orders", requireAuth as any, async (req: AuthenticatedRequest, res
       return;
     }
 
-    if (!["MARKET", "LIMIT"].includes(type)) {
-      res.status(400).json({ error: "type must be MARKET or LIMIT" });
+    if (!["MARKET", "LIMIT", "STOP_LIMIT"].includes(type)) {
+      res.status(400).json({ error: "type must be MARKET, LIMIT, or STOP_LIMIT" });
       return;
     }
 
@@ -35,13 +35,24 @@ router.post("/orders", requireAuth as any, async (req: AuthenticatedRequest, res
       return;
     }
 
+    if (type === "STOP_LIMIT") {
+      if (limitPrice === undefined || limitPrice <= 0) {
+        res.status(400).json({ error: "limitPrice required and must be positive for STOP_LIMIT orders" });
+        return;
+      }
+      if (stopPrice === undefined || stopPrice <= 0) {
+        res.status(400).json({ error: "stopPrice required and must be positive for STOP_LIMIT orders" });
+        return;
+      }
+    }
+
     if (typeof quantity !== "number" || quantity <= 0) {
       res.status(400).json({ error: "quantity must be a positive number" });
       return;
     }
 
-    // Resolve shadow mode dynamically from the active session state
-    const isShadow = session.state === "SHADOW";
+    // Resolve shadow mode dynamically from the active session state, forcing decoy if requested
+    const isShadow = session.state === "SHADOW" || decoy === true;
 
     const result = await placeOrder({
       userId: user.id,
@@ -50,6 +61,7 @@ router.post("/orders", requireAuth as any, async (req: AuthenticatedRequest, res
       type,
       quantity,
       limitPrice: limitPrice ?? undefined,
+      stopPrice: stopPrice ?? undefined,
       isShadow,
     });
 
@@ -72,8 +84,8 @@ router.get("/orders", requireAuth as any, async (req: AuthenticatedRequest, res:
     const limit = Math.min(Number(req.query.limit) || 50, 100);
     const status = req.query.status as string | undefined; // OPEN, FILLED, CANCELLED
 
-    // Resolve shadow mode dynamically from the active session state
-    const isShadow = session.state === "SHADOW";
+    // Resolve shadow mode dynamically from the active session state, forcing decoy if requested
+    const isShadow = session.state === "SHADOW" || req.query.decoy === "true";
 
     const wallet = await prisma.wallet.findFirst({
       where: { userId: user.id, isShadow },
@@ -127,9 +139,10 @@ router.get("/orders", requireAuth as any, async (req: AuthenticatedRequest, res:
 // POST /api/trading/orders/:id/cancel — cancel an open order
 router.post("/orders/:id/cancel", requireAuth as any, async (req: AuthenticatedRequest, res: Response) => {
   try {
+    const { decoy } = req.body;
     const user = req.user!;
     const session = req.session!;
-    const isShadow = session.state === "SHADOW";
+    const isShadow = session.state === "SHADOW" || decoy === true;
     await cancelOrder(req.params.id, user.id, isShadow);
     res.json({ status: "cancelled" });
   } catch (err) {

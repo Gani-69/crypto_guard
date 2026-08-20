@@ -20,9 +20,10 @@ export interface PlaceOrderInput {
   userId: string;
   coinId: string;
   side: "BUY" | "SELL";
-  type: "MARKET" | "LIMIT";
+  type: "MARKET" | "LIMIT" | "STOP_LIMIT";
   quantity: number;
   limitPrice?: number;
+  stopPrice?: number;
   isShadow?: boolean; // Block E — defaults to false
 }
 
@@ -33,6 +34,7 @@ export interface OrderResult {
     type: string;
     quantity: number;
     limitPrice: number | null;
+    stopPrice: number | null;
     fillPrice: number | null;
     status: string;
     coinSymbol: string;
@@ -44,7 +46,7 @@ export interface OrderResult {
 }
 
 export async function placeOrder(input: PlaceOrderInput): Promise<OrderResult> {
-  const { userId, coinId, side, type, quantity, limitPrice, isShadow = false } = input;
+  const { userId, coinId, side, type, quantity, limitPrice, stopPrice, isShadow = false } = input;
 
   // Validate quantity
   if (quantity <= 0) throw new OrderError("Quantity must be positive");
@@ -102,7 +104,26 @@ export async function placeOrder(input: PlaceOrderInput): Promise<OrderResult> {
       fillPrice = currentPrice;
       shouldFill = true;
     }
-    // Otherwise remains OPEN
+  } else if (type === "STOP_LIMIT" && limitPrice !== undefined && stopPrice !== undefined) {
+    // Buy stop-limit: triggers if current price >= stop price
+    // Sell stop-limit: triggers if current price <= stop price
+    let isTriggered = false;
+    if (side === "BUY" && currentPrice >= stopPrice) {
+      isTriggered = true;
+    } else if (side === "SELL" && currentPrice <= stopPrice) {
+      isTriggered = true;
+    }
+
+    if (isTriggered) {
+      // Once triggered, it behaves like a limit order
+      if (side === "BUY" && currentPrice <= limitPrice) {
+        fillPrice = currentPrice;
+        shouldFill = true;
+      } else if (side === "SELL" && currentPrice >= limitPrice) {
+        fillPrice = currentPrice;
+        shouldFill = true;
+      }
+    }
   }
 
   // Create the order
@@ -114,6 +135,7 @@ export async function placeOrder(input: PlaceOrderInput): Promise<OrderResult> {
       type,
       quantity,
       limitPrice: limitPrice ?? null,
+      stopPrice: stopPrice ?? null,
       fillPrice,
       status: shouldFill ? "FILLED" : "OPEN",
       isShadow,
@@ -133,6 +155,7 @@ export async function placeOrder(input: PlaceOrderInput): Promise<OrderResult> {
       type: order.type,
       quantity: order.quantity,
       limitPrice: order.limitPrice,
+      stopPrice: order.stopPrice,
       fillPrice: order.fillPrice,
       status: order.status,
       coinSymbol: coin.symbol,
@@ -142,6 +165,8 @@ export async function placeOrder(input: PlaceOrderInput): Promise<OrderResult> {
     },
     message: shouldFill
       ? `${side} ${quantity} ${coin.symbol} filled at ${formatUsdSimple(fillPrice!)}`
+      : type === "STOP_LIMIT"
+      ? `${side} stop-limit order placed for ${quantity} ${coin.symbol} (Trigger: ${formatUsdSimple(stopPrice!)}, Limit: ${formatUsdSimple(limitPrice!)})`
       : `${side} limit order placed for ${quantity} ${coin.symbol} at ${formatUsdSimple(limitPrice!)}`,
   };
 }

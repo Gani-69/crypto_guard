@@ -156,6 +156,47 @@ async function runE2ETest() {
   }
   console.log("  ✓ Order cancellation successfully blocked with 'Order not found' error");
 
+  // 9. Verify Manual Duress Gesture at Login
+  console.log("\n[Step 9] Verifying Manual Duress Gesture at login...");
+  const emailDuress = `e2e_duress_${Date.now()}@example.com`;
+
+  // Register new duress user
+  const regResDuress = await fetch(`${baseURL}/auth/register`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email: emailDuress, password, displayName: "Duress Agent" }),
+  });
+  if (!regResDuress.ok) {
+    throw new Error(`Duress registration failed: ${regResDuress.status} ${await regResDuress.text()}`);
+  }
+  console.log(`  ✓ Registered duress user`);
+
+  // Login with manualDuressSignal
+  const loginResDuress = await fetch(`${baseURL}/auth/login`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      email: emailDuress,
+      password,
+      signal: {
+        dwellTimeMs: 110,
+        flightTimeMs: 170,
+        typingSpeedCpm: 230,
+        correctionRate: 0.04,
+        manualDuressSignal: true
+      }
+    }),
+  });
+  if (!loginResDuress.ok) {
+    throw new Error(`Duress login failed: ${loginResDuress.status} ${await loginResDuress.text()}`);
+  }
+  const loginDataDuress = await loginResDuress.json();
+  console.log(`  ✓ Duress login session state: ${loginDataDuress.session.state}`);
+  if (loginDataDuress.session.state !== "SHADOW") {
+    throw new Error(`Expected manual duress session to start in SHADOW, got: ${loginDataDuress.session.state}`);
+  }
+  console.log("  ✓ Manual duress gesture successfully triggered SHADOW state on login");
+
   console.log("\n" + "=".repeat(60));
   console.log("   E2E ISOLATION AND SHADOW RUN PASSED SUCCESSFULLY!");
   console.log("=".repeat(60));

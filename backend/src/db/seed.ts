@@ -61,6 +61,12 @@ const COINS = [
 
 // ── Main seed ────────────────────────────────────────────────────────
 async function main() {
+  const coinCount = await prisma.coin.count();
+  if (coinCount > 0) {
+    console.log("[seed] Database already contains coins. Skipping data wipe and seeding...");
+    return;
+  }
+
   console.log("[seed] Clearing existing data...");
   // Delete in order respecting foreign keys
   await prisma.transaction.deleteMany();

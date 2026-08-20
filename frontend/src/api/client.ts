@@ -63,12 +63,16 @@ export async function removeFromWatchlist(coinId: string): Promise<{ status: str
 
 // ── Wallet ──
 
-export async function getWallet(): Promise<WalletData> {
-  return fetchJson('/wallet');
+export async function getWallet(decoy?: boolean): Promise<WalletData> {
+  return fetchJson(`/wallet${decoy ? '?decoy=true' : ''}`);
 }
 
-export async function getTransactions(limit?: number): Promise<{ transactions: Transaction[] }> {
-  return fetchJson(`/wallet/transactions${limit ? `?limit=${limit}` : ''}`);
+export async function getTransactions(limit?: number, decoy?: boolean): Promise<{ transactions: Transaction[] }> {
+  const qs = new URLSearchParams();
+  if (limit) qs.set('limit', String(limit));
+  if (decoy) qs.set('decoy', 'true');
+  const query = qs.toString();
+  return fetchJson(`/wallet/transactions${query ? `?${query}` : ''}`);
 }
 
 // ── Trading ──
@@ -76,9 +80,11 @@ export async function getTransactions(limit?: number): Promise<{ transactions: T
 export async function placeOrder(order: {
   coinId: string;
   side: 'BUY' | 'SELL';
-  type: 'MARKET' | 'LIMIT';
+  type: 'MARKET' | 'LIMIT' | 'STOP_LIMIT';
   quantity: number;
   limitPrice?: number;
+  stopPrice?: number;
+  decoy?: boolean;
 }): Promise<OrderResult> {
   return fetchJson('/trading/orders', {
     method: 'POST',
@@ -86,14 +92,33 @@ export async function placeOrder(order: {
   });
 }
 
-export async function getOrders(params?: { limit?: number; status?: string }): Promise<{ orders: Order[] }> {
+export async function getOrders(params?: { limit?: number; status?: string; decoy?: boolean }): Promise<{ orders: Order[] }> {
   const qs = new URLSearchParams();
   if (params?.limit) qs.set('limit', String(params.limit));
   if (params?.status) qs.set('status', params.status);
+  if (params?.decoy) qs.set('decoy', 'true');
   const query = qs.toString();
   return fetchJson(`/trading/orders${query ? `?${query}` : ''}`);
 }
 
-export async function cancelOrder(orderId: string): Promise<{ status: string }> {
-  return fetchJson(`/trading/orders/${orderId}/cancel`, { method: 'POST' });
+export async function cancelOrder(orderId: string, decoy?: boolean): Promise<{ status: string }> {
+  return fetchJson(`/trading/orders/${orderId}/cancel`, { 
+    method: 'POST',
+    body: JSON.stringify({ decoy })
+  });
+}
+
+export async function createTransaction(data: { type: 'DEPOSIT' | 'WITHDRAWAL'; coinId: string; amount: number; decoy?: boolean }): Promise<{ success: boolean; message: string }> {
+  return fetchJson('/wallet/transaction', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+}
+
+export async function getAdminUsers(): Promise<{ users: any[] }> {
+  return fetchJson('/session/admin/users');
+}
+
+export async function getAdminLogs(): Promise<{ sessions: any[] }> {
+  return fetchJson('/session/admin/logs');
 }
