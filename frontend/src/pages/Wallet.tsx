@@ -2,15 +2,50 @@ import { useState, useEffect } from 'react';
 import { useWallet, useTransactions, useCoins } from '../hooks/useMarketData';
 import { formatUsd } from '../types';
 import * as api from '../api/client';
-import { Copy, Check, Wallet as WalletIcon, ArrowUpRight, ArrowDownLeft, Sliders, AlertCircle, Award, Lock, Unlock } from 'lucide-react';
+import {
+  Copy,
+  Check,
+  Wallet as WalletIcon,
+  ArrowUpRight,
+  ArrowDownLeft,
+  Sliders,
+  AlertCircle,
+  Award,
+  Lock,
+  Unlock,
+  ShieldCheck,
+  Smartphone,
+  Building2,
+  CheckCircle2,
+} from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
+import { useNotifications } from '../context/NotificationContext';
 import './Wallet.css';
 
 export default function Wallet() {
-  const { session } = useAuth();
+  const { user, session, submitKyc } = useAuth();
+  const { showToast } = useToast();
+  const { addNotification } = useNotifications();
   const { coins } = useCoins();
   const [copied, setCopied] = useState(false);
   const [copiedText, setCopiedText] = useState('');
+
+  // KYC Verification state
+  const isKycVerified =
+    user?.kycStatus === 'VERIFIED' ||
+    user?.email === 'demo@cryptoguard.dev' ||
+    user?.email === 'admin@cryptoguard.dev';
+
+  const [kycName, setKycName] = useState(user?.displayName || '');
+  const [kycPan, setKycPan] = useState('');
+  const [kycAadhaar, setKycAadhaar] = useState('');
+  const [kycMethod, setKycMethod] = useState<'UPI' | 'BANK'>('UPI');
+  const [kycUpiId, setKycUpiId] = useState('');
+  const [kycBankAcc, setKycBankAcc] = useState('');
+  const [kycIfsc, setKycIfsc] = useState('');
+  const [kycLoading, setKycLoading] = useState(false);
+  const [kycError, setKycError] = useState<string | null>(null);
 
   // Two-level verification states from global auth context
   const { isUnlocked, setIsUnlocked } = useAuth();
@@ -110,6 +145,56 @@ export default function Wallet() {
     }
   };
 
+  // Handle KYC Verification
+  const handleKycSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setKycError(null);
+
+    if (!kycPan || kycPan.trim().length < 10) {
+      setKycError('Please enter a valid 10-character PAN number (e.g. ABCDE1234F).');
+      return;
+    }
+    if (!kycAadhaar || kycAadhaar.trim().length !== 4 || isNaN(Number(kycAadhaar))) {
+      setKycError('Please enter the last 4 numeric digits of your Aadhaar card.');
+      return;
+    }
+    if (kycMethod === 'UPI' && !kycUpiId.trim()) {
+      setKycError('Please enter your PhonePe / Google Pay UPI ID.');
+      return;
+    }
+    if (kycMethod === 'BANK' && (!kycBankAcc.trim() || !kycIfsc.trim())) {
+      setKycError('Please enter your Bank Account number and IFSC code.');
+      return;
+    }
+
+    setKycLoading(true);
+
+    try {
+      await submitKyc({
+        fullName: kycName || user?.displayName || user?.email?.split('@')[0],
+        panNumber: kycPan,
+        aadhaarLast4: kycAadhaar,
+        paymentMethod: kycMethod,
+        upiId: kycMethod === 'UPI' ? kycUpiId : undefined,
+        bankAccount: kycMethod === 'BANK' ? kycBankAcc : undefined,
+        ifsc: kycMethod === 'BANK' ? kycIfsc : undefined,
+      });
+
+      showToast('KYC Verified successfully! Your trading wallet is now active.', 'success');
+      addNotification({
+        title: 'KYC Verification Complete',
+        body: 'Identity & real-time payment linked. Your wallet is active for deposits.',
+        type: 'system',
+      });
+      refetchActiveWallet();
+    } catch (err: any) {
+      setKycError(err.message || 'KYC verification failed.');
+      showToast(err.message || 'KYC verification failed', 'error');
+    } finally {
+      setKycLoading(false);
+    }
+  };
+
   // Handle deposit UTR verification
   const handleDepositSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -141,10 +226,17 @@ export default function Wallet() {
       });
 
       setDepStep(4);
+      showToast(`₹${Number(depAmount).toLocaleString('en-IN')} deposited successfully`, 'success');
+      addNotification({
+        title: 'Deposit Successful',
+        body: `₹${Number(depAmount).toLocaleString('en-IN')} added to INR cash balance.`,
+        type: 'deposit',
+      });
       refetchActiveWallet();
       refetchActiveTransactions();
     } catch (err: any) {
       setDepError(err.message || 'Deposit verification failed.');
+      showToast(err.message || 'Deposit verification failed', 'error');
     } finally {
       setDepLoading(false);
     }
@@ -188,10 +280,17 @@ export default function Wallet() {
       });
 
       setWithStep(2);
+      showToast(`₹${Number(withAmount).toLocaleString('en-IN')} withdrawal initiated`, 'success');
+      addNotification({
+        title: 'Withdrawal Initiated',
+        body: `₹${Number(withAmount).toLocaleString('en-IN')} withdrawal request submitted.`,
+        type: 'deposit',
+      });
       refetchActiveWallet();
       refetchActiveTransactions();
     } catch (err: any) {
       setWithError(err.message || 'Withdrawal execution failed.');
+      showToast(err.message || 'Withdrawal execution failed', 'error');
     } finally {
       setWithLoading(false);
     }
@@ -251,6 +350,154 @@ export default function Wallet() {
         <h1>INR Wallet & Cashbook</h1>
         <p className="text-secondary">CoinDCX styled fiat payment simulation gateway with ARES shadow support</p>
       </div>
+
+      {/* ── KYC Verification Banner / Form ── */}
+      {!isKycVerified ? (
+        <div className="wallet__kyc-card card-glass fade-in">
+          <div className="wallet__kyc-header">
+            <div>
+              <h2>KYC Identity & Real-time Payment Verification</h2>
+              <p className="text-secondary" style={{ fontSize: '0.8rem', marginTop: 4 }}>
+                Complete a fast verification to activate your INR Trading Wallet and connect PhonePe / UPI / Bank gateways.
+              </p>
+            </div>
+            <span className="wallet__kyc-badge wallet__kyc-badge--pending">KYC Pending</span>
+          </div>
+
+          <form onSubmit={handleKycSubmit} className="wallet__kyc-form">
+            <div className="wallet__form-field">
+              <label htmlFor="kyc-name">Full Legal Name</label>
+              <input
+                id="kyc-name"
+                type="text"
+                placeholder="e.g. Durgaprasad K"
+                value={kycName}
+                onChange={(e) => setKycName(e.target.value)}
+                required
+              />
+            </div>
+
+            <div className="wallet__form-field">
+              <label htmlFor="kyc-pan">PAN Card Number (10 Characters)</label>
+              <input
+                id="kyc-pan"
+                type="text"
+                maxLength={10}
+                placeholder="ABCDE1234F"
+                value={kycPan}
+                onChange={(e) => setKycPan(e.target.value.toUpperCase())}
+                style={{ textTransform: 'uppercase' }}
+                required
+              />
+            </div>
+
+            <div className="wallet__form-field">
+              <label htmlFor="kyc-aadhaar">Aadhaar Card (Last 4 Digits)</label>
+              <input
+                id="kyc-aadhaar"
+                type="text"
+                maxLength={4}
+                placeholder="XXXX-XXXX-1234"
+                value={kycAadhaar}
+                onChange={(e) => setKycAadhaar(e.target.value.replace(/\D/g, ''))}
+                required
+              />
+            </div>
+
+            <div className="wallet__form-field">
+              <label>Link Real-time Payment Method</label>
+              <div className="wallet__payment-toggle">
+                <button
+                  type="button"
+                  className={`wallet__payment-btn ${kycMethod === 'UPI' ? 'wallet__payment-btn--active' : ''}`}
+                  onClick={() => setKycMethod('UPI')}
+                >
+                  <Smartphone size={14} /> PhonePe / UPI ID
+                </button>
+                <button
+                  type="button"
+                  className={`wallet__payment-btn ${kycMethod === 'BANK' ? 'wallet__payment-btn--active' : ''}`}
+                  onClick={() => setKycMethod('BANK')}
+                >
+                  <Building2 size={14} /> Bank Account
+                </button>
+              </div>
+            </div>
+
+            {kycMethod === 'UPI' ? (
+              <div className="wallet__form-field wallet__kyc-form-full">
+                <label htmlFor="kyc-upi">PhonePe / Google Pay / BHIM UPI ID</label>
+                <input
+                  id="kyc-upi"
+                  type="text"
+                  placeholder="e.g. yourname@ybl, yourname@okhdfcbank"
+                  value={kycUpiId}
+                  onChange={(e) => setKycUpiId(e.target.value)}
+                  required
+                />
+              </div>
+            ) : (
+              <>
+                <div className="wallet__form-field">
+                  <label htmlFor="kyc-acc">Bank Account Number</label>
+                  <input
+                    id="kyc-acc"
+                    type="text"
+                    placeholder="e.g. 1029384756"
+                    value={kycBankAcc}
+                    onChange={(e) => setKycBankAcc(e.target.value)}
+                    required
+                  />
+                </div>
+                <div className="wallet__form-field">
+                  <label htmlFor="kyc-ifsc">Bank IFSC Code</label>
+                  <input
+                    id="kyc-ifsc"
+                    type="text"
+                    placeholder="e.g. SBIN0001234"
+                    value={kycIfsc}
+                    onChange={(e) => setKycIfsc(e.target.value.toUpperCase())}
+                    style={{ textTransform: 'uppercase' }}
+                    required
+                  />
+                </div>
+              </>
+            )}
+
+            {kycError && (
+              <div className="wallet__kyc-form-full">
+                <div className="wallet__form-alert wallet__form-alert--error" style={{ display: 'flex', gap: 6, padding: '8px 12px', borderRadius: 4 }}>
+                  <AlertCircle size={14} />
+                  <span>{kycError}</span>
+                </div>
+              </div>
+            )}
+
+            <div className="wallet__kyc-form-full flex justify-end mt-sm">
+              <button type="submit" className="btn btn-primary" disabled={kycLoading}>
+                {kycLoading ? 'Verifying Identity...' : (
+                  <>
+                    <ShieldCheck size={16} /> Verify &amp; Activate Trading Wallet
+                  </>
+                )}
+              </button>
+            </div>
+          </form>
+        </div>
+      ) : (
+        <div className="wallet__kyc-banner fade-in">
+          <div className="wallet__kyc-banner-content">
+            <div className="wallet__kyc-banner-icon" style={{ background: 'rgba(3, 197, 139, 0.15)', color: 'var(--green-400)' }}>
+              <CheckCircle2 size={20} />
+            </div>
+            <div>
+              <h3>KYC Verified &amp; Wallet Active</h3>
+              <p>Your identity &amp; real-time payment gateway are linked. You can deposit INR or trade seamlessly.</p>
+            </div>
+          </div>
+          <span className="wallet__kyc-badge wallet__kyc-badge--verified">Verified</span>
+        </div>
+      )}
 
 
 

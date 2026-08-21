@@ -38,7 +38,7 @@
   align-items: center;
   padding: 32px;
   border-radius: var(--radius-xl);
-  background: linear-gradient(135deg, rgba(21, 28, 47, 0.7) 0%, rgba(13, 18, 34, 0.7) 100%);
+  background: var(--gradient-card);
   border: 1px solid rgba(6, 182, 212, 0.18);
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), 0 0 25px rgba(6, 182, 212, 0.05);
   position: relative;
@@ -307,7 +307,7 @@
 .wallet__web3-card {
   padding: 32px;
   border-radius: var(--radius-xl);
-  background: linear-gradient(135deg, rgba(21, 28, 47, 0.7) 0%, rgba(13, 18, 34, 0.7) 100%);
+  background: var(--gradient-card);
   border: 1px solid rgba(148, 163, 184, 0.08);
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
   display: flex;
@@ -587,3 +587,145 @@
     flex-direction: column;
   }
 }
+
+/* ── KYC Verification Styles ── */
+.wallet__kyc-banner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 24px;
+  border-radius: var(--radius-lg);
+  background: rgba(255, 109, 0, 0.08);
+  border: 1px solid rgba(255, 109, 0, 0.25);
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.wallet__kyc-banner-content {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.wallet__kyc-banner-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: var(--radius-md);
+  background: rgba(255, 109, 0, 0.15);
+  color: var(--cyan-400);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.wallet__kyc-banner h3 {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 2px;
+}
+
+.wallet__kyc-banner p {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+}
+
+.wallet__kyc-card {
+  padding: 32px;
+  border-radius: var(--radius-xl);
+  background: var(--glass-bg);
+  border: 1px solid var(--border-default);
+  margin-bottom: 24px;
+}
+
+.wallet__kyc-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border-default);
+}
+
+.wallet__kyc-header h2 {
+  font-size: 1.15rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: var(--text-primary);
+}
+
+.wallet__kyc-badge {
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 99px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.wallet__kyc-badge--pending {
+  background: rgba(251, 191, 36, 0.12);
+  color: var(--amber-400);
+  border: 1px solid rgba(251, 191, 36, 0.3);
+}
+
+.wallet__kyc-badge--verified {
+  background: rgba(3, 197, 139, 0.12);
+  color: var(--green-400);
+  border: 1px solid rgba(3, 197, 139, 0.3);
+}
+
+.wallet__kyc-form {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+
+.wallet__kyc-form-full {
+  grid-column: span 2;
+}
+
+.wallet__payment-toggle {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.wallet__payment-btn {
+  flex: 1;
+  padding: 10px 14px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-default);
+  background: var(--bg-input);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.wallet__payment-btn:hover {
+  color: var(--text-primary);
+  border-color: var(--border-hover);
+}
+
+.wallet__payment-btn--active {
+  background: rgba(255, 109, 0, 0.12);
+  border-color: var(--cyan-400);
+  color: var(--cyan-400);
+}
+
+@media (max-width: 768px) {
+  .wallet__kyc-form {
+    grid-template-columns: 1fr;
+  }
+  .wallet__kyc-form-full {
+    grid-column: span 1;
+  }
+}
+

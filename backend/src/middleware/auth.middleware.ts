@@ -9,6 +9,7 @@ export interface AuthenticatedRequest extends Request {
     id: string;
     email: string;
     displayName: string | null;
+    kycStatus: string;
   };
   session?: {
     id: string;
@@ -55,6 +56,7 @@ export async function requireAuth(
             id: true,
             email: true,
             displayName: true,
+            kycStatus: true,
           },
         },
       },

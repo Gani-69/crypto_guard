@@ -28,6 +28,127 @@
   margin-top: 4px;
 }
 
+.dashboard__live-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.65rem;
+  color: var(--green-400);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  background: rgba(3, 197, 139, 0.08);
+  border: 1px solid rgba(3, 197, 139, 0.2);
+  border-radius: var(--radius-md);
+  padding: 4px 10px;
+}
+
+
+/* ── Portfolio + Fear & Greed Row ── */
+.dashboard__portfolio-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 16px;
+  align-items: start;
+}
+
+.dashboard__portfolio {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.card-glass {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-xl);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+.dashboard__portfolio-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.dashboard__portfolio-label {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 700;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+}
+
+.dashboard__portfolio-value {
+  font-size: 1.8rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: var(--text-primary);
+}
+
+.dashboard__portfolio-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.dashboard__portfolio-body {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.dashboard__donut-wrap {
+  flex-shrink: 0;
+}
+
+.dashboard__holdings {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+}
+
+.dashboard__holding-pill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.8rem;
+}
+
+.dashboard__holding-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.dashboard__holding-sym {
+  font-weight: 700;
+  color: var(--text-primary);
+  min-width: 36px;
+}
+
+.dashboard__holding-pct {
+  color: var(--text-secondary);
+  margin-left: auto;
+  font-family: var(--font-mono);
+}
+
+.dashboard__fear-greed-card {
+  padding: 20px 16px;
+  min-width: 180px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 /* ── Stats grid ── */
 .dashboard__stats {
   display: grid;
@@ -35,12 +156,13 @@
   gap: 16px;
 }
 
+
 .stat-card {
   display: flex;
   align-items: center;
   gap: 16px;
   padding: 20px 24px;
-  background: rgba(21, 28, 47, 0.45);
+  background: var(--glass-bg);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border: 1px solid var(--border-default);
@@ -141,7 +263,7 @@
   padding: 0;
   border-radius: var(--radius-lg);
   border: 1px solid var(--border-default);
-  background: rgba(21, 28, 47, 0.3);
+  background: var(--glass-bg);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
 }
@@ -162,7 +284,7 @@
   letter-spacing: 0.08em;
   border-bottom: 1px solid var(--border-default);
   white-space: nowrap;
-  background: rgba(17, 24, 39, 0.4);
+  background: var(--bg-elevated);
 }
 
 .market-table td {
@@ -190,7 +312,7 @@
 
 .market-table__symbol {
   font-weight: 700;
-  color: white;
+  color: var(--text-primary);
   font-size: 0.9rem;
 }
 

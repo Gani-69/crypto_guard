@@ -1,0 +1,34 @@
+/* ── Candlestick Chart ── */
+
+.candlestick-tooltip {
+  background: var(--bg-card);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+  font-size: 0.78rem;
+  box-shadow: var(--shadow-md);
+  min-width: 160px;
+}
+
+.candlestick-tooltip__time {
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 6px;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.candlestick-tooltip__row {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 2px 0;
+  color: var(--text-secondary);
+}
+
+.candlestick-tooltip__row span:last-child {
+  font-weight: 600;
+  font-family: var(--font-mono);
+  color: var(--text-primary);
+}

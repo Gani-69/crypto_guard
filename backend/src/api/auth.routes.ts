@@ -19,7 +19,16 @@ router.post("/register", async (req: Request, res: Response) => {
       return;
     }
 
-    const existingUser = await prisma.user.findUnique({ where: { email } });
+    const cleanEmail = email.trim().toLowerCase();
+
+    const existingUser = await prisma.user.findFirst({
+      where: {
+        OR: [
+          { email: cleanEmail },
+          { email: email.trim() },
+        ],
+      },
+    });
     if (existingUser) {
       res.status(400).json({ error: "email_taken", message: "Email already registered" });
       return;
@@ -28,14 +37,15 @@ router.post("/register", async (req: Request, res: Response) => {
     const passwordHash = await bcrypt.hash(password, 10);
     const user = await prisma.user.create({
       data: {
-        email,
+        email: cleanEmail,
         passwordHash,
-        displayName: displayName || email.split("@")[0],
+        displayName: displayName || cleanEmail.split("@")[0],
+        kycStatus: "PENDING",
       },
     });
 
-    // Pre-create authentic wallet
-    const realWallet = await prisma.wallet.create({
+    // Pre-create authentic wallet (0 balance)
+    await prisma.wallet.create({
       data: {
         userId: user.id,
         isShadow: false,
@@ -43,21 +53,6 @@ router.post("/register", async (req: Request, res: Response) => {
         chain: "devnet",
       },
     });
-
-    // Give new user starting balance for simulation: 0.5 BTC, 10 ETH
-    const btc = await prisma.coin.findUnique({ where: { symbol: "BTC" } });
-    const eth = await prisma.coin.findUnique({ where: { symbol: "ETH" } });
-
-    if (btc) {
-      await prisma.holding.create({
-        data: { walletId: realWallet.id, coinId: btc.id, amount: 0.5 },
-      });
-    }
-    if (eth) {
-      await prisma.holding.create({
-        data: { walletId: realWallet.id, coinId: eth.id, amount: 10.0 },
-      });
-    }
 
     // Pre-create decoy shadow wallet
     await prisma.wallet.create({
@@ -75,11 +70,12 @@ router.post("/register", async (req: Request, res: Response) => {
         id: user.id,
         email: user.email,
         displayName: user.displayName,
+        kycStatus: user.kycStatus,
       },
     });
   } catch (err) {
     console.error("[auth] POST /register error:", err);
-    res.status(500).json({ error: "internal_error" });
+    res.status(500).json({ error: "internal_error", message: "Internal server error during registration" });
   }
 });
 
@@ -93,7 +89,16 @@ router.post("/login", async (req: Request, res: Response) => {
       return;
     }
 
-    const user = await prisma.user.findUnique({ where: { email } });
+    const cleanEmail = email.trim().toLowerCase();
+
+    const user = await prisma.user.findFirst({
+      where: {
+        OR: [
+          { email: cleanEmail },
+          { email: email.trim() },
+        ],
+      },
+    });
     if (!user || !(await bcrypt.compare(password, user.passwordHash))) {
       res.status(401).json({ error: "invalid_credentials", message: "Invalid email or password" });
       return;
@@ -152,6 +157,7 @@ router.post("/login", async (req: Request, res: Response) => {
         id: user.id,
         email: user.email,
         displayName: user.displayName,
+        kycStatus: user.kycStatus,
       },
     });
   } catch (err) {

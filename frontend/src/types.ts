@@ -11,6 +11,7 @@ export interface Coin {
   logoUrl: string | null;
   rank: number | null;
   isTrending: boolean;
+  sparkline?: number[];
 }
 
 export interface CoinDetail extends Coin {

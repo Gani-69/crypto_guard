@@ -22,22 +22,29 @@ import {
   Activity,
 } from 'lucide-react';
 import { useCoin } from '../hooks/useMarketData';
+import { useWebSocket } from '../hooks/useWebSocket';
 import { CRYPTO_ICONS, ICON_COLORS } from '../components/PriceCard';
 import { formatUsd, formatPct } from '../types';
 import { useState } from 'react';
 import * as api from '../api/client';
+import CandlestickChart, { aggregateToOHLC } from '../components/CandlestickChart';
+import PriceAlerts from '../components/PriceAlerts';
 import './CoinDetail.css';
 
 export default function CoinDetail() {
   const { symbol } = useParams<{ symbol: string }>();
   const { coin, loading, error } = useCoin(symbol ?? '');
+  const { livePrices } = useWebSocket();
   const [watchlisted, setWatchlisted] = useState(false);
 
   // Timeframe and Indicator toggles
   const [timeframe, setTimeframe] = useState<'1H' | '4H' | '1D' | '1W'>('1W');
+  const [chartType, setChartType] = useState<'line' | 'candle'>('line');
   const [showEMA, setShowEMA] = useState(false);
   const [showRSI, setShowRSI] = useState(false);
   const [showMACD, setShowMACD] = useState(false);
+
+  const displayPrice = (coin && livePrices[coin.symbol]) ?? coin?.priceUsd ?? 0;
 
   if (loading) {
     return (
@@ -223,7 +230,7 @@ export default function CoinDetail() {
         </div>
 
         <div className="coin-detail__price-row">
-          <span className="coin-detail__price">{formatUsd(coin.priceUsd)}</span>
+          <span className="coin-detail__price">{formatUsd(displayPrice)}</span>
           <span className={`coin-detail__change ${isUp ? 'text-green' : 'text-red'}`}>
             {isUp ? <TrendingUp size={18} /> : <TrendingDown size={18} />}
             {formatPct(coin.change24hPct)}
@@ -234,8 +241,19 @@ export default function CoinDetail() {
       {/* Chart Workspace */}
       <div className="coin-detail__chart card">
         <div className="coin-detail__chart-header">
-          <div className="flex items-center gap-md">
+          <div className="flex items-center gap-md" style={{ flexWrap: 'wrap', gap: 8 }}>
             <h3>Interactive Trading Workspace</h3>
+            {/* Chart Type Toggle */}
+            <div className="coin-detail__chart-type-toggle">
+              <button
+                className={`coin-detail__chart-type-btn ${chartType === 'line' ? 'coin-detail__chart-type-btn--active' : ''}`}
+                onClick={() => setChartType('line')}
+              >Line</button>
+              <button
+                className={`coin-detail__chart-type-btn ${chartType === 'candle' ? 'coin-detail__chart-type-btn--active' : ''}`}
+                onClick={() => setChartType('candle')}
+              >Candle</button>
+            </div>
             <div className="coin-detail__timeframe-selector">
               {(['1H', '4H', '1D', '1W'] as const).map((t) => (
                 <button
@@ -274,43 +292,47 @@ export default function CoinDetail() {
 
         {/* Primary Price Chart */}
         <div className="coin-detail__chart-area">
-          <ResponsiveContainer width="100%" height={260}>
-            <AreaChart data={chartData} margin={{ top: 10, right: 10, bottom: 0, left: 10 }}>
-              <defs>
-                <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor={chartColor} stopOpacity={0.2} />
-                  <stop offset="95%" stopColor={chartColor} stopOpacity={0.01} />
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.06)" />
-              <XAxis dataKey="time" stroke="var(--text-muted)" fontSize={10} tickLine={false} axisLine={false} />
-              <YAxis
-                stroke="var(--text-muted)"
-                fontSize={10}
-                tickLine={false}
-                axisLine={false}
-                domain={['auto', 'auto']}
-                tickFormatter={(v: number) => formatUsd(v, true)}
-                width={70}
-              />
-              <Tooltip
-                contentStyle={{
-                  background: 'var(--bg-card)',
-                  border: '1px solid var(--border-default)',
-                  borderRadius: 'var(--radius-md)',
-                  color: 'var(--text-primary)',
-                  fontSize: '0.8rem',
-                  boxShadow: 'var(--shadow-lg)',
-                }}
-                labelStyle={{ color: 'var(--text-muted)' }}
-                formatter={(value: any, name: any) => [formatUsd(Number(value) || 0), name === 'price' ? 'Price' : 'EMA(12)']}
-              />
-              <Area type="monotone" dataKey="price" stroke={chartColor} strokeWidth={2} fill="url(#chartGradient)" dot={false} />
-              {showEMA && (
-                <Line type="monotone" dataKey="ema" stroke="#f59e0b" strokeWidth={1.5} dot={false} activeDot={false} />
-              )}
-            </AreaChart>
-          </ResponsiveContainer>
+          {chartType === 'candle' ? (
+            <CandlestickChart data={aggregateToOHLC(activePoints, 30)} />
+          ) : (
+            <ResponsiveContainer width="100%" height={260}>
+              <AreaChart data={chartData} margin={{ top: 10, right: 10, bottom: 0, left: 10 }}>
+                <defs>
+                  <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor={chartColor} stopOpacity={0.2} />
+                    <stop offset="95%" stopColor={chartColor} stopOpacity={0.01} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.06)" />
+                <XAxis dataKey="time" stroke="var(--text-muted)" fontSize={10} tickLine={false} axisLine={false} />
+                <YAxis
+                  stroke="var(--text-muted)"
+                  fontSize={10}
+                  tickLine={false}
+                  axisLine={false}
+                  domain={['auto', 'auto']}
+                  tickFormatter={(v: number) => formatUsd(v, true)}
+                  width={70}
+                />
+                <Tooltip
+                  contentStyle={{
+                    background: 'var(--bg-card)',
+                    border: '1px solid var(--border-default)',
+                    borderRadius: 'var(--radius-md)',
+                    color: 'var(--text-primary)',
+                    fontSize: '0.8rem',
+                    boxShadow: 'var(--shadow-lg)',
+                  }}
+                  labelStyle={{ color: 'var(--text-muted)' }}
+                  formatter={(value: any, name: any) => [formatUsd(Number(value) || 0), name === 'price' ? 'Price' : 'EMA(12)']}
+                />
+                <Area type="monotone" dataKey="price" stroke={chartColor} strokeWidth={2} fill="url(#chartGradient)" dot={false} />
+                {showEMA && (
+                  <Line type="monotone" dataKey="ema" stroke="#f59e0b" strokeWidth={1.5} dot={false} activeDot={false} />
+                )}
+              </AreaChart>
+            </ResponsiveContainer>
+          )}
         </div>
 
         {/* RSI Sub-chart */}
@@ -384,6 +406,9 @@ export default function CoinDetail() {
           </Link>
         </div>
       </div>
+
+      {/* Price Alerts */}
+      <PriceAlerts symbol={coin.symbol} currentPrice={displayPrice} />
     </div>
   );
 }

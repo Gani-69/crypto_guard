@@ -47,11 +47,27 @@ router.get("/coins", async (req: Request, res: Response) => {
         logoUrl: true,
         rank: true,
         isTrending: true,
-        // Exclude priceHistory7d from list endpoint (too heavy)
+        priceHistory7d: true, // Needed for sparkline slice
       },
     });
 
-    res.json({ coins, count: coins.length });
+    // Build slim sparkline (last 20 price points only)
+    const coinsWithSparkline = coins.map((c) => {
+      let sparkline: number[] = [];
+      if (c.priceHistory7d) {
+        try {
+          const history: Array<{ price: number }> = JSON.parse(c.priceHistory7d);
+          sparkline = history.slice(-20).map((p) => p.price);
+        } catch {
+          // ignore parse errors
+        }
+      }
+      const { priceHistory7d: _dropped, ...rest } = c;
+      return { ...rest, sparkline };
+    });
+
+    res.json({ coins: coinsWithSparkline, count: coins.length });
+
   } catch (err) {
     console.error("[market] GET /coins error:", err);
     res.status(500).json({ error: "internal_error" });

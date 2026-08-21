@@ -1,0 +1,119 @@
+/* ── Toast Notification System ── */
+
+.toast-container {
+  position: fixed;
+  top: 80px;
+  right: 20px;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  pointer-events: none;
+  max-width: 380px;
+  width: 100%;
+}
+
+/* Single toast */
+.toast {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: var(--radius-md);
+  background: var(--glass-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--shadow-lg);
+  pointer-events: auto;
+  position: relative;
+  overflow: hidden;
+  animation: toastSlideIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  font-size: 0.85rem;
+  color: var(--text-primary);
+}
+
+@keyframes toastSlideIn {
+  from {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Left accent border by type */
+.toast--success { border-left: 3px solid var(--green-400); }
+.toast--error   { border-left: 3px solid var(--red-400); }
+.toast--info    { border-left: 3px solid var(--cyan-400); }
+.toast--warning { border-left: 3px solid var(--amber-400); }
+
+/* Icon */
+.toast__icon {
+  flex-shrink: 0;
+  display: flex;
+}
+
+.toast--success .toast__icon { color: var(--green-400); }
+.toast--error   .toast__icon { color: var(--red-400); }
+.toast--info    .toast__icon { color: var(--cyan-400); }
+.toast--warning .toast__icon { color: var(--amber-400); }
+
+/* Message */
+.toast__message {
+  flex: 1;
+  line-height: 1.4;
+  font-weight: 500;
+}
+
+/* Close */
+.toast__close {
+  flex-shrink: 0;
+  color: var(--text-muted);
+  padding: 4px;
+  border-radius: 4px;
+  transition: all var(--transition-fast);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.toast__close:hover {
+  color: var(--text-primary);
+  background: rgba(148, 163, 184, 0.1);
+}
+
+/* Auto-dismiss progress bar */
+.toast__progress {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 2px;
+  width: 100%;
+  transform-origin: left;
+  animation: toastProgress linear forwards;
+}
+
+.toast--success .toast__progress { background: var(--green-400); }
+.toast--error   .toast__progress { background: var(--red-400); }
+.toast--info    .toast__progress { background: var(--cyan-400); }
+.toast--warning .toast__progress { background: var(--amber-400); }
+
+@keyframes toastProgress {
+  from { transform: scaleX(1); }
+  to   { transform: scaleX(0); }
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+  .toast-container {
+    right: 12px;
+    left: 12px;
+    max-width: none;
+  }
+}

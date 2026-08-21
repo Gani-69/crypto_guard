@@ -238,4 +238,59 @@ router.post("/transaction", requireAuth as any, async (req: AuthenticatedRequest
   }
 });
 
+// POST /api/wallet/kyc — verify KYC and activate wallet
+router.post("/kyc", requireAuth as any, async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const user = req.user!;
+    const { fullName, panNumber, aadhaarLast4, paymentMethod, upiId, bankAccount, ifsc } = req.body;
+
+    if (!panNumber || panNumber.trim().length < 10) {
+      res.status(400).json({ error: "invalid_pan", message: "Valid 10-digit PAN number is required" });
+      return;
+    }
+
+    if (!aadhaarLast4 || aadhaarLast4.trim().length !== 4) {
+      res.status(400).json({ error: "invalid_aadhaar", message: "Last 4 digits of Aadhaar are required" });
+      return;
+    }
+
+    const kycData = {
+      fullName: fullName?.trim() || user.displayName || user.email.split("@")[0],
+      panNumber: panNumber.trim().toUpperCase(),
+      aadhaarLast4: aadhaarLast4.trim(),
+      paymentMethod: paymentMethod || "UPI",
+      upiId: upiId?.trim() || undefined,
+      bankAccount: bankAccount?.trim() || undefined,
+      ifsc: ifsc?.trim()?.toUpperCase() || undefined,
+      verifiedAt: new Date().toISOString(),
+    };
+
+    const updatedUser = await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        kycStatus: "VERIFIED",
+        kycDataJson: JSON.stringify(kycData),
+        kycVerifiedAt: new Date(),
+      },
+      select: {
+        id: true,
+        email: true,
+        displayName: true,
+        kycStatus: true,
+        kycVerifiedAt: true,
+      },
+    });
+
+    res.json({
+      success: true,
+      message: "KYC verification successful! Trading wallet activated.",
+      user: updatedUser,
+    });
+  } catch (err) {
+    console.error("[wallet] POST /kyc error:", err);
+    res.status(500).json({ error: "internal_error", message: "KYC processing failed" });
+  }
+});
+
 export default router;
+

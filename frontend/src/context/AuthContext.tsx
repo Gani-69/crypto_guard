@@ -4,12 +4,23 @@ interface User {
   id: string;
   email: string;
   displayName: string | null;
+  kycStatus?: 'PENDING' | 'VERIFIED' | string;
 }
 
 interface Session {
   id: string;
   state: string;
   expiresAt: string;
+}
+
+export interface KycPayload {
+  fullName?: string;
+  panNumber: string;
+  aadhaarLast4: string;
+  paymentMethod: 'UPI' | 'BANK';
+  upiId?: string;
+  bankAccount?: string;
+  ifsc?: string;
 }
 
 interface AuthContextType {
@@ -19,6 +30,7 @@ interface AuthContextType {
   loading: boolean;
   login: (email: string, password: string, signal?: any) => Promise<void>;
   register: (email: string, password: string, displayName?: string) => Promise<void>;
+  submitKyc: (kycData: KycPayload) => Promise<void>;
   logout: () => Promise<void>;
   refreshSessionState: () => Promise<string>;
   isUnlocked: boolean;
@@ -120,6 +132,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const submitKyc = async (kycData: KycPayload) => {
+    const res = await fetch('/api/wallet/kyc', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(kycData),
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.message || 'KYC verification failed');
+    }
+
+    const data = await res.json();
+    if (data.user) {
+      setUser((prev) => ({
+        ...(prev ?? {}),
+        ...data.user,
+      }));
+    }
+  };
+
   const logout = async () => {
     try {
       await fetch('/api/auth/logout', { method: 'POST' });
@@ -156,6 +189,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         loading,
         login,
         register,
+        submitKyc,
         logout,
         refreshSessionState,
         isUnlocked,

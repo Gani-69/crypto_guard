@@ -10,8 +10,10 @@ import {
   List,
 } from 'lucide-react';
 import { useCoins, useDebounce } from '../hooks/useMarketData';
+import { useWebSocket } from '../hooks/useWebSocket';
 import PriceCard from '../components/PriceCard';
 import { CRYPTO_ICONS, ICON_COLORS } from '../components/PriceCard';
+import Sparkline from '../components/Sparkline';
 import { formatUsd, formatPct } from '../types';
 import './Markets.css';
 
@@ -37,6 +39,7 @@ export default function Markets() {
     sort: sortField,
     order: sortOrder,
   });
+  const { livePrices } = useWebSocket();
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
@@ -121,7 +124,12 @@ export default function Markets() {
       ) : viewMode === 'grid' ? (
         <div className="markets__grid">
           {coins.map((coin, i) => (
-            <PriceCard key={coin.id} coin={coin} style={{ animationDelay: `${i * 40}ms` }} />
+            <PriceCard
+              key={coin.id}
+              coin={coin}
+              livePrice={livePrices[coin.symbol]}
+              style={{ animationDelay: `${i * 40}ms` }}
+            />
           ))}
         </div>
       ) : (
@@ -146,6 +154,7 @@ export default function Markets() {
                   Volume (24h) <SortIcon field="volume24hUsd" />
                 </th>
                 <th>Trending</th>
+                <th>7d Chart</th>
               </tr>
             </thead>
             <tbody>
@@ -171,7 +180,7 @@ export default function Markets() {
                         </div>
                       </Link>
                     </td>
-                    <td className="font-semibold">{formatUsd(coin.priceUsd)}</td>
+                    <td className="font-semibold">{formatUsd(livePrices[coin.symbol] ?? coin.priceUsd)}</td>
                     <td>
                       <span className={`market-table__change ${isUp ? 'text-green' : 'text-red'}`}>
                         {isUp ? <TrendingUp size={13} /> : <TrendingDown size={13} />}
@@ -186,6 +195,14 @@ export default function Markets() {
                           <Flame size={10} /> Hot
                         </span>
                       )}
+                    </td>
+                    <td>
+                      <Sparkline
+                        prices={coin.sparkline ?? []}
+                        positive={(coin.change24hPct ?? 0) >= 0}
+                        width={72}
+                        height={28}
+                      />
                     </td>
                   </tr>
                 );

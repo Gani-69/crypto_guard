@@ -1,6 +1,7 @@
 import { Star, Trash2, TrendingUp, TrendingDown } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useWatchlist } from '../hooks/useMarketData';
+import { useWebSocket } from '../hooks/useWebSocket';
 import { CRYPTO_ICONS, ICON_COLORS } from '../components/PriceCard';
 import { formatUsd, formatPct } from '../types';
 import * as api from '../api/client';
@@ -8,6 +9,7 @@ import './Watchlist.css';
 
 export default function Watchlist() {
   const { watchlist, loading, refetch } = useWatchlist();
+  const { livePrices } = useWebSocket();
 
   const handleRemove = async (coinId: string) => {
     try {
@@ -62,7 +64,7 @@ export default function Watchlist() {
                     <span className="watchlist__name">{coin.name}</span>
                   </div>
                   <div className="watchlist__price-area">
-                    <span className="watchlist__price">{formatUsd(coin.priceUsd)}</span>
+                    <span className="watchlist__price">{formatUsd(livePrices[coin.symbol] ?? coin.priceUsd)}</span>
                     <span className={`watchlist__change ${isUp ? 'text-green' : 'text-red'}`}>
                       {isUp ? <TrendingUp size={13} /> : <TrendingDown size={13} />}
                       {formatPct(coin.change24hPct)}

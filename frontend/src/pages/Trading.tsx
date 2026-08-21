@@ -1,15 +1,21 @@
 import { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, Link } from 'react-router-dom';
 import { useCoins, useOrders, useWallet } from '../hooks/useMarketData';
 import { formatUsd, formatPct } from '../types';
 import * as api from '../api/client';
-import { AlertCircle, X, ArrowUpRight, ArrowDownLeft } from 'lucide-react';
+import { X, ArrowUpRight, ArrowDownLeft } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
+import { useNotifications } from '../context/NotificationContext';
 import './Trading.css';
 
 export default function Trading() {
-  const { isUnlocked } = useAuth();
+  const { isUnlocked, user } = useAuth();
   const decoyMode = !isUnlocked;
+  const isKycVerified =
+    user?.kycStatus === 'VERIFIED' ||
+    user?.email === 'demo@cryptoguard.dev' ||
+    user?.email === 'admin@cryptoguard.dev';
 
   const [searchParams] = useSearchParams();
   const symbolParam = searchParams.get('symbol');
@@ -27,9 +33,11 @@ export default function Trading() {
   const [limitPrice, setLimitPrice] = useState<number | ''>('');
   const [stopPrice, setStopPrice] = useState<number | ''>('');
 
+  const { showToast } = useToast();
+  const { addNotification } = useNotifications();
+
   // Execution states
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
 
   // Simulated Order Book bids and asks
   const [bids, setBids] = useState<Array<{ price: number; qty: number }>>([]);
@@ -121,10 +129,13 @@ export default function Trading() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!isKycVerified) {
+      showToast('Please complete KYC verification in Wallet before trading.', 'warning');
+      return;
+    }
     if (!selectedCoinId || !quantity) return;
 
     setLoading(true);
-    setMessage(null);
 
     try {
       const res = await api.placeOrder({
@@ -137,7 +148,12 @@ export default function Trading() {
         decoy: decoyMode,
       });
 
-      setMessage({ text: res.message, type: 'success' });
+      showToast(res.message, 'success');
+      addNotification({
+        title: `${side} Order Placed`,
+        body: `${side} ${quantity} ${selectedCoin?.symbol ?? ''} (${type})`,
+        type: 'trade',
+      });
       setQuantity('');
       if (type === 'MARKET') {
         setLimitPrice('');
@@ -146,7 +162,7 @@ export default function Trading() {
       refetchOrders();
       refetchWallet();
     } catch (err: any) {
-      setMessage({ text: err.message || 'Failed to place order', type: 'error' });
+      showToast(err.message || 'Failed to place order', 'error');
     } finally {
       setLoading(false);
     }
@@ -155,11 +171,16 @@ export default function Trading() {
   const handleCancelOrder = async (orderId: string) => {
     try {
       await api.cancelOrder(orderId, decoyMode);
-      setMessage({ text: 'Order cancelled successfully', type: 'success' });
+      showToast('Order cancelled successfully', 'success');
+      addNotification({
+        title: 'Order Cancelled',
+        body: `Order ${orderId.slice(0, 8)} was cancelled`,
+        type: 'trade',
+      });
       refetchOrders();
       refetchWallet();
     } catch (err: any) {
-      setMessage({ text: err.message || 'Failed to cancel order', type: 'error' });
+      showToast(err.message || 'Failed to cancel order', 'error');
     }
   };
 
@@ -398,6 +419,33 @@ export default function Trading() {
               </div>
             </div>
 
+            {/* KYC Notice if pending */}
+            {!isKycVerified && (
+              <div
+                style={{
+                  background: 'rgba(251, 191, 36, 0.08)',
+                  border: '1px solid rgba(251, 191, 36, 0.25)',
+                  borderRadius: 'var(--radius-md)',
+                  padding: 12,
+                  marginBottom: 12,
+                }}
+              >
+                <p className="text-amber font-semibold" style={{ fontSize: '0.78rem', marginBottom: 4 }}>
+                  KYC Verification Required
+                </p>
+                <p className="text-secondary" style={{ fontSize: '0.72rem', marginBottom: 8, lineHeight: 1.4 }}>
+                  Complete identity &amp; real-time payment linking to activate order placement.
+                </p>
+                <Link
+                  to="/wallet"
+                  className="btn btn-secondary"
+                  style={{ fontSize: '0.72rem', padding: '4px 10px', display: 'inline-flex' }}
+                >
+                  Verify KYC in Wallet &rarr;
+                </Link>
+              </div>
+            )}
+
             {/* Submit */}
             <button
               type="submit"
@@ -406,14 +454,6 @@ export default function Trading() {
             >
               {loading ? 'Processing...' : `${side} ${selectedCoin?.symbol ?? ''}`}
             </button>
-
-            {/* Alerts */}
-            {message && (
-              <div className={`trading__alert trading__alert--${message.type}`}>
-                <AlertCircle size={14} />
-                <span>{message.text}</span>
-              </div>
-            )}
           </form>
         </div>
 

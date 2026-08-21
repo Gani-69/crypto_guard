@@ -84,7 +84,7 @@
 /* ── Chart ── */
 .coin-detail__chart {
   padding: 24px 28px;
-  background: rgba(21, 28, 47, 0.4);
+  background: var(--glass-bg);
   border: 1px solid var(--border-default);
   border-radius: var(--radius-xl);
 }
@@ -99,7 +99,7 @@
 .coin-detail__chart-header h3 {
   font-size: 1.05rem;
   font-weight: 700;
-  color: white;
+  color: var(--text-primary);
 }
 
 .coin-detail__chart-header span {
@@ -124,7 +124,7 @@
   align-items: center;
   gap: 14px;
   padding: 20px 24px;
-  background: rgba(21, 28, 47, 0.45);
+  background: var(--glass-bg);
   border: 1px solid var(--border-default);
   border-radius: var(--radius-xl);
   transition: all var(--transition-base);
@@ -150,13 +150,13 @@
   font-size: 1.15rem;
   font-weight: 800;
   margin-top: 4px;
-  color: white;
+  color: var(--text-primary);
 }
 
 /* ── Trade placeholder ── */
 .coin-detail__trade {
   padding: 24px 28px;
-  background: rgba(21, 28, 47, 0.55);
+  background: var(--glass-bg);
   border: 1px solid var(--border-default);
   border-radius: var(--radius-xl);
   backdrop-filter: blur(16px);
@@ -167,7 +167,7 @@
   font-size: 1.1rem;
   font-weight: 800;
   letter-spacing: -0.01em;
-  color: white;
+  color: var(--text-primary);
 }
 
 .coin-detail__trade-buttons {
@@ -294,3 +294,36 @@
   font-weight: 700;
   margin-bottom: 6px;
 }
+
+/* Chart type toggle (Line / Candle) */
+.coin-detail__chart-type-toggle {
+  display: flex;
+  background: var(--bg-input);
+  padding: 2px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-default);
+  margin-left: 4px;
+}
+
+.coin-detail__chart-type-btn {
+  padding: 4px 10px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.coin-detail__chart-type-btn:hover {
+  color: var(--text-primary);
+}
+
+.coin-detail__chart-type-btn--active {
+  background: var(--bg-elevated);
+  color: var(--cyan-400) !important;
+  box-shadow: var(--shadow-sm);
+}
+

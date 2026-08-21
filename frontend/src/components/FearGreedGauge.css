@@ -1,0 +1,53 @@
+/* ── Fear & Greed Gauge ── */
+
+.fear-greed {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.fear-greed__title {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+.fear-greed__gauge-wrap {
+  width: 100%;
+  max-width: 200px;
+}
+
+.fear-greed__svg {
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+.fear-greed__score-text {
+  font-size: 22px;
+  font-weight: 800;
+  fill: var(--text-primary);
+  font-family: var(--font-sans);
+}
+
+.fear-greed__zone-text {
+  font-size: 8px;
+  fill: var(--text-muted);
+  font-family: var(--font-sans);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-weight: 600;
+}
+
+.fear-greed__labels {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  max-width: 200px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  opacity: 0.8;
+}

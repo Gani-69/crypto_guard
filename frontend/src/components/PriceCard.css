@@ -104,3 +104,25 @@
   font-size: 0.72rem;
   color: var(--text-muted);
 }
+
+/* ── Live price flash animations ── */
+@keyframes flashUp {
+  0%   { color: var(--green-400); }
+  60%  { color: var(--green-400); }
+  100% { color: inherit; }
+}
+
+@keyframes flashDown {
+  0%   { color: var(--red-400); }
+  60%  { color: var(--red-400); }
+  100% { color: inherit; }
+}
+
+.price-card__price--flash-up {
+  animation: flashUp 0.6s ease-out forwards;
+}
+
+.price-card__price--flash-down {
+  animation: flashDown 0.6s ease-out forwards;
+}
+

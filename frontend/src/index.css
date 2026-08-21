@@ -44,6 +44,12 @@
   --gradient-card:  linear-gradient(145deg, rgba(22, 27, 38, 0.9) 0%, rgba(18, 22, 32, 0.95) 100%);
   --gradient-glow:  radial-gradient(ellipse at 50% 0%, rgba(255, 109, 0, 0.15) 0%, transparent 60%);
 
+  /* ── Glass / Card ── */
+  --glass-bg: rgba(21, 28, 47, 0.55);
+  --glass-border: rgba(148, 163, 184, 0.08);
+  --card-hover-shadow: 0 6px 20px rgba(0, 0, 0, 0.45), 0 0 15px rgba(6, 182, 212, 0.08);
+  --glass-hover-shadow: 0 8px 24px rgba(0, 0, 0, 0.5), 0 0 20px rgba(6, 182, 212, 0.05);
+
   /* ── Shadows ── */
   --shadow-sm:   0 1px 2px rgba(0, 0, 0, 0.3);
   --shadow-md:   0 4px 12px rgba(0, 0, 0, 0.4);
@@ -68,6 +74,52 @@
   /* ── Layout ── */
   --sidebar-width: 260px;
   --header-height: 64px;
+
+  /* ── Scrollbar ── */
+  --scrollbar-thumb: rgba(148, 163, 184, 0.2);
+  --scrollbar-thumb-hover: rgba(148, 163, 184, 0.35);
+
+  /* ── Skeleton ── */
+  --skeleton-base: var(--bg-card);
+  --skeleton-shine: var(--bg-elevated);
+}
+
+/* ── Light Theme ── */
+[data-theme="light"] {
+  --bg-primary:     #f0f2f5;
+  --bg-secondary:   #e8ebf0;
+  --bg-card:        #ffffff;
+  --bg-card-hover:  #f8f9fb;
+  --bg-elevated:    #eef1f6;
+  --bg-input:       #f5f7fa;
+
+  --text-primary:   #0f172a;
+  --text-secondary: #475569;
+  --text-muted:     #94a3b8;
+  --text-inverse:   #f1f5f9;
+
+  --border-default: rgba(15, 23, 42, 0.1);
+  --border-hover:   rgba(15, 23, 42, 0.2);
+  --border-accent:  rgba(255, 109, 0, 0.35);
+
+  --gradient-card:  linear-gradient(145deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 250, 252, 0.98) 100%);
+  --gradient-glow:  radial-gradient(ellipse at 50% 0%, rgba(255, 109, 0, 0.08) 0%, transparent 60%);
+
+  --glass-bg: rgba(255, 255, 255, 0.75);
+  --glass-border: rgba(15, 23, 42, 0.08);
+  --card-hover-shadow: 0 4px 16px rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(0, 0, 0, 0.04);
+  --glass-hover-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+
+  --shadow-sm:   0 1px 3px rgba(0, 0, 0, 0.06);
+  --shadow-md:   0 4px 12px rgba(0, 0, 0, 0.08);
+  --shadow-lg:   0 8px 24px rgba(0, 0, 0, 0.12);
+  --shadow-glow: 0 0 20px rgba(255, 109, 0, 0.08);
+
+  --scrollbar-thumb: rgba(15, 23, 42, 0.15);
+  --scrollbar-thumb-hover: rgba(15, 23, 42, 0.25);
+
+  --skeleton-base: #e8ebf0;
+  --skeleton-shine: #f5f7fa;
 }
 
 /* ── Reset + Global ── */
@@ -141,12 +193,12 @@ input:focus, select:focus, textarea:focus {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(148, 163, 184, 0.2);
+  background: var(--scrollbar-thumb);
   border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(148, 163, 184, 0.35);
+  background: var(--scrollbar-thumb-hover);
 }
 
 /* ── Utility classes ── */
@@ -182,24 +234,24 @@ input:focus, select:focus, textarea:focus {
 }
 
 .card:hover {
-  border-color: rgba(6, 182, 212, 0.25);
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45), 0 0 15px rgba(6, 182, 212, 0.08);
+  border-color: var(--border-accent);
+  box-shadow: var(--card-hover-shadow);
   transform: translateY(-2px);
 }
 
 .card-glass {
-  background: rgba(21, 28, 47, 0.55);
+  background: var(--glass-bg);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(148, 163, 184, 0.08);
+  border: 1px solid var(--glass-border);
   border-radius: var(--radius-lg);
   padding: 20px;
   transition: border-color var(--transition-base), box-shadow var(--transition-base), transform var(--transition-base);
 }
 
 .card-glass:hover {
-  border-color: rgba(6, 182, 212, 0.2);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5), 0 0 20px rgba(6, 182, 212, 0.05);
+  border-color: var(--border-accent);
+  box-shadow: var(--glass-hover-shadow);
   transform: translateY(-1px);
 }
 
@@ -254,7 +306,7 @@ input:focus, select:focus, textarea:focus {
 .btn-secondary:hover:not(:disabled) {
   background: var(--bg-card-hover);
   border-color: var(--border-hover);
-  color: white;
+  color: var(--text-primary);
 }
 
 .btn-ghost {
@@ -264,7 +316,7 @@ input:focus, select:focus, textarea:focus {
 
 .btn-ghost:hover:not(:disabled) {
   color: var(--text-primary);
-  background: rgba(148, 163, 184, 0.08);
+  background: var(--border-default);
 }
 
 .btn-success {
@@ -332,7 +384,7 @@ input:focus, select:focus, textarea:focus {
 }
 
 .skeleton {
-  background: linear-gradient(90deg, var(--bg-card) 25%, var(--bg-elevated) 50%, var(--bg-card) 75%);
+  background: linear-gradient(90deg, var(--skeleton-base) 25%, var(--skeleton-shine) 50%, var(--skeleton-base) 75%);
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite ease-in-out;
   border-radius: var(--radius-sm);

@@ -24,7 +24,7 @@
   overflow: hidden;
   box-shadow: var(--shadow-lg), 0 0 40px rgba(0, 0, 0, 0.4);
   border: 1px solid rgba(148, 163, 184, 0.08);
-  background: rgba(17, 24, 39, 0.7);
+  background: var(--glass-bg);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   transition: border-color var(--transition-base), box-shadow var(--transition-base);
@@ -64,7 +64,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: white;
+  color: var(--text-inverse);
   margin-bottom: 18px;
   box-shadow: 0 0 24px rgba(6, 182, 212, 0.35);
   animation: pulseGlow 3s infinite ease-in-out;

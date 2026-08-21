@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { TrendingUp, TrendingDown } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
 import type { Coin } from '../types';
 import { formatUsd, formatPct } from '../types';
 import './PriceCard.css';
@@ -7,6 +8,8 @@ import './PriceCard.css';
 interface Props {
   coin: Coin;
   style?: React.CSSProperties;
+  /** Optional live price override from WebSocket */
+  livePrice?: number;
 }
 
 // Map of crypto symbols to emoji/unicode representations for visual identity
@@ -24,8 +27,24 @@ const ICON_COLORS: Record<string, string> = {
   NEAR: '#00c08b', APT: '#000000', ARB: '#28a0f0', OP: '#ff0420', SUI: '#6fbcf0',
 };
 
-export default function PriceCard({ coin, style }: Props) {
+export default function PriceCard({ coin, style, livePrice }: Props) {
+  const displayPrice = livePrice ?? coin.priceUsd;
   const isPositive = (coin.change24hPct ?? 0) >= 0;
+
+  // Flash animation when price ticks
+  const prevPriceRef = useRef<number>(displayPrice);
+  const [flash, setFlash] = useState<'up' | 'down' | null>(null);
+
+  useEffect(() => {
+    if (livePrice === undefined) return;
+    const prev = prevPriceRef.current;
+    if (livePrice !== prev) {
+      setFlash(livePrice > prev ? 'up' : 'down');
+      prevPriceRef.current = livePrice;
+      const t = setTimeout(() => setFlash(null), 600);
+      return () => clearTimeout(t);
+    }
+  }, [livePrice]);
 
   return (
     <Link to={`/coin/${coin.symbol}`} className="price-card card" style={style}>
@@ -45,7 +64,11 @@ export default function PriceCard({ coin, style }: Props) {
           {formatPct(coin.change24hPct)}
         </div>
       </div>
-      <div className="price-card__price">{formatUsd(coin.priceUsd)}</div>
+      <div
+        className={`price-card__price ${flash === 'up' ? 'price-card__price--flash-up' : flash === 'down' ? 'price-card__price--flash-down' : ''}`}
+      >
+        {formatUsd(displayPrice)}
+      </div>
       <div className="price-card__meta">
         <span>MCap {formatUsd(coin.marketCapUsd ?? 0, true)}</span>
         <span>Vol {formatUsd(coin.volume24hUsd ?? 0, true)}</span>

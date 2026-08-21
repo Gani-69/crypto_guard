@@ -9,7 +9,7 @@
 /* Navbar top container */
 .navbar {
   height: 64px;
-  background: rgba(11, 14, 20, 0.96);
+  background: var(--bg-secondary);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border-bottom: 1px solid var(--border-default);
@@ -48,7 +48,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: white;
+  color: var(--text-inverse);
   box-shadow: 0 0 12px rgba(255, 109, 0, 0.3);
 }
 
@@ -191,6 +191,22 @@
   background: rgba(244, 67, 54, 0.08);
 }
 
+.navbar__theme-btn {
+  color: var(--text-muted);
+  display: inline-flex;
+  padding: 6px;
+  border-radius: var(--radius-sm);
+  transition: all var(--transition-fast);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
+
+.navbar__theme-btn:hover {
+  color: var(--amber-400);
+  background: rgba(245, 158, 11, 0.08);
+}
+
 .navbar__avatar {
   width: 32px;
   height: 32px;
@@ -201,7 +217,7 @@
   justify-content: center;
   font-weight: 700;
   font-size: 0.78rem;
-  color: white;
+  color: var(--text-inverse);
   user-select: none;
 }
 

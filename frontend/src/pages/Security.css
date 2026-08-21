@@ -57,7 +57,7 @@
   padding: 28px 24px;
   text-align: center;
   min-height: 230px;
-  background: rgba(21, 28, 47, 0.45);
+  background: var(--glass-bg);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border: 1px solid var(--border-default);
@@ -149,7 +149,7 @@
   position: absolute;
   font-size: 1.3rem;
   font-weight: 800;
-  color: white;
+  color: var(--text-primary);
   font-family: var(--font-mono);
   letter-spacing: -0.02em;
 }
@@ -279,7 +279,7 @@
 
 .security__timeline-title {
   font-size: 0.82rem;
-  color: white;
+  color: var(--text-primary);
 }
 
 .security__timeline-reason {
@@ -303,7 +303,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(17, 24, 39, 0.25);
+  background: var(--bg-elevated);
   border: 1px solid var(--border-default);
   border-radius: var(--radius-lg);
   padding: 20px 10px 10px;

@@ -12,11 +12,18 @@ import {
   LogOut,
   Menu,
   X,
+  Sun,
+  Moon,
+  Bell,
 } from 'lucide-react';
 import './Layout.css';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
+import { useNotifications } from '../context/NotificationContext';
+import './Notifications.css';
 import { useKeystrokeBiometrics } from '../hooks/useKeystrokeBiometrics';
 import Login from '../pages/Login';
+import Footer from './Footer';
 
 const NAV_ITEMS = [
   { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
@@ -29,6 +36,9 @@ const NAV_ITEMS = [
 
 export default function Layout() {
   const { user, session, loading, logout, refreshSessionState } = useAuth();
+  const { theme, toggleTheme } = useTheme();
+  const { notifications, unreadCount, markAllRead, clearAll } = useNotifications();
+  const [notifOpen, setNotifOpen] = useState(false);
   
   // Activate keystroke telemetry monitoring
   useKeystrokeBiometrics();
@@ -169,6 +179,68 @@ export default function Layout() {
               <span>LIVE</span>
             </div>
 
+            {/* Theme toggle */}
+            <button className="navbar__theme-btn" onClick={toggleTheme} title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}>
+              {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
+            </button>
+
+            {/* Notification Bell */}
+            <div className="notif-bell">
+              <button
+                className="notif-bell__btn"
+                onClick={() => { setNotifOpen(o => !o); }}
+                title="Notifications"
+                aria-label={`Notifications (${unreadCount} unread)`}
+              >
+                <Bell size={16} />
+                {unreadCount > 0 && (
+                  <span className="notif-bell__badge">{unreadCount > 9 ? '9+' : unreadCount}</span>
+                )}
+              </button>
+
+              {notifOpen && (
+                <div className="notif-bell__dropdown">
+                  <div className="notif-bell__header">
+                    <span className="notif-bell__header-title">Notifications</span>
+                    <div className="notif-bell__header-actions">
+                      <button className="notif-bell__action-btn" onClick={markAllRead}>Mark all read</button>
+                      <button className="notif-bell__action-btn" onClick={clearAll}>Clear</button>
+                    </div>
+                  </div>
+                  <div className="notif-bell__list">
+                    {notifications.length === 0 ? (
+                      <div className="notif-bell__empty">No notifications</div>
+                    ) : (
+                      notifications.slice(0, 10).map((n) => {
+                        const dotColors: Record<string, string> = {
+                          trade: 'var(--cyan-400)',
+                          deposit: 'var(--green-400)',
+                          alert: 'var(--amber-400)',
+                          system: 'var(--purple-400)',
+                        };
+                        const ageMs = Date.now() - n.timestamp;
+                        const ageStr = ageMs < 60_000
+                          ? 'just now'
+                          : ageMs < 3_600_000
+                          ? `${Math.floor(ageMs / 60_000)}m ago`
+                          : `${Math.floor(ageMs / 3_600_000)}h ago`;
+                        return (
+                          <div key={n.id} className={`notif-bell__item ${!n.read ? 'notif-bell__item--unread' : ''}`}>
+                            <span className="notif-bell__item-dot" style={{ background: dotColors[n.type] }} />
+                            <div>
+                              <div className="notif-bell__item-title">{n.title}</div>
+                              <div className="notif-bell__item-body">{n.body}</div>
+                              <div className="notif-bell__item-time">{ageStr}</div>
+                            </div>
+                          </div>
+                        );
+                      })
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+
             {/* Logout button */}
             <button className="navbar__logout-btn" onClick={logout} title="Log out safely">
               <LogOut size={16} />
@@ -217,6 +289,9 @@ export default function Layout() {
       <main className="navbar__content">
         <Outlet />
       </main>
+
+      {/* ── Footer ── */}
+      <Footer />
 
       {/* Step Up Verification Modal */}
       {(sessionState === 'STEP_UP' || sessionState === 'RESTRICTED') && (
