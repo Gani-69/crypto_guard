@@ -198,3 +198,20 @@ The interesting question is not "can we detect anomalous behavior" (well-trodden
 ---
 
 *This document is designed to feed directly into the full paper's Related Work section (A5) and the patent gap analysis (A6). All claims about the absence of prior art at the intersection should be re-verified by a patent attorney before any filing (see A6 scope note).*
+
+---
+
+## 7. Note on F3 (Master PIN Gate) and Prior Art
+
+The dual-PIN mechanism implemented in F3 (`/api/pin/setup`, `/api/pin/check-balance`) **deliberately follows established prior art**. Multiple production wallets use a secondary PIN or passphrase to expose a decoy account:
+
+- **Coinkite Coldcard** — "Trick PINs" (documented in product manual): a designated secondary PIN unlocks a limited "duress wallet" with a pre-configured plausible balance.
+- **Trezor** — BIP-39 passphrase wallet: an optional passphrase attached to the mnemonic unlocks a deterministic alternate wallet. Sharing a different passphrase (including blank) yields a different address set.
+- **Edge Wallet** — PIN-gated decoy feature (product documentation).
+- **Unstoppable Wallet** — similar implementation.
+
+CryptoGuard's F3 is a software replication of this established pattern, added as a **complementary manual fallback** for use cases where ARES's implicit trigger may be insufficient (e.g., coercion before a transaction attempt, rather than during active typing). It is explicitly not a novelty claim.
+
+**The novelty claim remains the ARES implicit trigger**: the behavioral risk pipeline that routes to Shadow State without requiring the user to consciously invoke a secondary credential. The dual-PIN gate is a belt-and-suspenders addition for the research demo, not a patentable innovation.
+
+Any patent application should clearly distinguish F3 (prior art) from the core ARES → Policy Engine → Shadow State routing system.

@@ -11,6 +11,18 @@
 // data. This means "can a Shadow session touch authentic state" is a schema-level
 // question we can test directly (do writes from a Shadow session ever produce a
 // row with isShadow=false?), not just an application-logic promise.
+//
+// Feature additions (F1–F5):
+//   F1: User.phone — required at registration. @default("") is a migration sentinel
+//       for existing dev rows; the application layer requires a non-empty value.
+//   F2: Session OTP fields + isActive (pending→active gate) + otpAttempts (brute-force lockout).
+//   F3: User.normalPinHash / masterPinHash — stored for setup-time distinctness check only;
+//       at balance-check time only masterPinHash is read (any non-master input → decoy).
+//       PinCheckLog audits outcomes without storing session state.
+//   F4: User.role (USER|ADMIN), AdminAccessLog, Session.adminVerifiedAt.
+//       Admin views NEVER expose Session.state, RiskEvent, PolicyDecision, or BehavioralEvent —
+//       those are enforced via explicit Prisma select{} clauses in admin.routes.ts.
+//   F5: WebAuthnCredential table.
 
 generator client {
   provider = "prisma-client-js"
@@ -24,20 +36,34 @@ datasource db {
 // ---------- Identity & Session ----------
 
 model User {
-  id           String   @id @default(uuid())
-  email        String   @unique
-  passwordHash String
-  displayName  String?
-  kycStatus    String   @default("PENDING") // PENDING | VERIFIED
-  kycDataJson  String?  // JSON snapshot of verified PAN, Aadhaar last4, UPI/bank handles
+  id            String   @id @default(uuid())
+  email         String   @unique
+  // F1: phone required at registration. @default("") is a migration sentinel for
+  //     existing dev rows; auth.routes.ts rejects empty values at the application layer.
+  phone         String   @default("")
+  passwordHash  String
+  displayName   String?
+  // F4: RBAC role. USER | ADMIN. Admin seeded via npm run seed (dev-only).
+  role          String   @default("USER")  // USER | ADMIN
+  // F3: PIN hashes. normalPinHash is ONLY checked at setup time (distinctness enforcement).
+  //     At balance-check time, only masterPinHash is compared — any non-master input
+  //     returns the decoy wallet. Never read normalPinHash in pin.routes.ts check-balance.
+  normalPinHash String?
+  masterPinHash String?
+  kycStatus     String   @default("PENDING") // PENDING | VERIFIED
+  kycDataJson   String?  // JSON snapshot of verified PAN, Aadhaar last4, UPI/bank handles
   kycVerifiedAt DateTime?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
-  sessions        Session[]
-  wallets         Wallet[]
-  watchlistItems  WatchlistItem[]
-  behavioralEvents BehavioralEvent[]
+  sessions            Session[]
+  wallets             Wallet[]
+  watchlistItems      WatchlistItem[]
+  behavioralEvents    BehavioralEvent[]
+  // F5:
+  webAuthnCredentials WebAuthnCredential[]
+  // F4: admin actor side of the log
+  adminAccessLogs     AdminAccessLog[]    @relation("AdminActor")
 }
 
 // SessionState values: NORMAL | STEP_UP | RESTRICTED | SHADOW
@@ -54,10 +80,23 @@ model Session {
   lastActivityAt DateTime @default(now())
   expiresAt      DateTime
   revokedAt      DateTime?
+  // F2: pending→active gate. isActive=false until OTP verified.
+  //     requireAuth rejects isActive=false with 401 session_pending.
+  isActive       Boolean  @default(false)
+  // F2: OTP fields. otpCode stores a bcrypt hash (never plaintext).
+  otpCode        String?
+  otpExpiresAt   DateTime?
+  otpVerified    Boolean  @default(false)
+  // F2: brute-force lockout. Incremented before bcrypt compare. >5 → session revoked.
+  otpAttempts    Int      @default(0)
+  // F4: admin re-verification timestamp. Must be <5 min ago for admin routes.
+  adminVerifiedAt DateTime?
 
   behavioralEvents BehavioralEvent[]
   riskEvents       RiskEvent[]
   policyDecisions  PolicyDecision[]
+  // F3:
+  pinCheckLogs     PinCheckLog[]
 
   @@index([userId])
   @@index([state])
@@ -228,4 +267,54 @@ model WatchlistItem {
   addedAt   DateTime @default(now())
 
   @@unique([userId, coinId])
+}
+
+// ---------- F5: WebAuthn credentials ----------
+// Stores public-key credentials registered by the user via navigator.credentials.
+// publicKey is stored as base64. counter is incremented on each authentication
+// to detect cloned authenticators (replay protection).
+
+model WebAuthnCredential {
+  id           String   @id @default(uuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id])
+  credentialId String   @unique
+  publicKey    String   // base64-encoded public key
+  counter      Int      @default(0)
+  createdAt    DateTime @default(now())
+
+  @@index([userId])
+}
+
+// ---------- F4: Admin access audit log ----------
+// Written BEFORE data is fetched (crash mid-request still leaves a record).
+// viewedUserId is null for list views.
+// IMPORTANT: this table must never reference Session.state, RiskEvent, or
+// PolicyDecision — it is an access audit only, not a behavioral audit.
+
+model AdminAccessLog {
+  id           String   @id @default(uuid())
+  adminUserId  String
+  adminUser    User     @relation("AdminActor", fields: [adminUserId], references: [id])
+  viewedUserId String?  // null for list actions
+  action       String   // e.g. "list_users" | "view_user" | "view_logs"
+  timestamp    DateTime @default(now())
+
+  @@index([adminUserId])
+  @@index([timestamp])
+}
+
+// ---------- F3: PIN check audit log ----------
+// Records the outcome of each /api/pin/check-balance call for auditability.
+// outcome values: shadow_bypass | normal_master | normal_decoy
+// Does NOT store the PIN itself, the session state, or any ARES output.
+
+model PinCheckLog {
+  id        String   @id @default(uuid())
+  sessionId String
+  session   Session  @relation(fields: [sessionId], references: [id])
+  outcome   String   // shadow_bypass | normal_master | normal_decoy
+  createdAt DateTime @default(now())
+
+  @@index([sessionId])
 }

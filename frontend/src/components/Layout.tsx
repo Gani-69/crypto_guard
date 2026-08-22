@@ -8,6 +8,7 @@ import {
   ArrowLeftRight,
   Shield,
   ShieldAlert,
+  ShieldCheck,
   Search,
   LogOut,
   Menu,
@@ -245,6 +246,19 @@ export default function Layout() {
             <button className="navbar__logout-btn" onClick={logout} title="Log out safely">
               <LogOut size={16} />
             </button>
+
+            {/* Admin panel link — only visible for ADMIN role */}
+            {user?.role === 'ADMIN' && (
+              <NavLink
+                to="/admin"
+                className={({ isActive }) => `navbar__logout-btn${isActive ? ' navbar__logout-btn--active' : ''}`}
+                title="Admin Dashboard"
+                style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: '0.75rem', padding: '6px 10px', borderRadius: 6, background: 'rgba(245,158,11,0.1)', color: '#fbbf24', border: '1px solid rgba(245,158,11,0.2)', textDecoration: 'none' }}
+              >
+                <ShieldCheck size={14} />
+                Admin
+              </NavLink>
+            )}
             
             {/* Avatar */}
             <div className="navbar__avatar" title={`Logged in as ${user?.displayName || user?.email}`}>

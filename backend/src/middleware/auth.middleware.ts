@@ -10,6 +10,7 @@ export interface AuthenticatedRequest extends Request {
     email: string;
     displayName: string | null;
     kycStatus: string;
+    role: string; // USER | ADMIN
   };
   session?: {
     id: string;
@@ -57,6 +58,7 @@ export async function requireAuth(
             email: true,
             displayName: true,
             kycStatus: true,
+            role: true,  // F4: needed by requireAdmin middleware
           },
         },
       },
@@ -74,6 +76,14 @@ export async function requireAuth(
 
     if (new Date() > session.expiresAt) {
       res.status(401).json({ error: "unauthorized", message: "Session expired" });
+      return;
+    }
+
+    // F2: Reject sessions that have not completed OTP verification yet.
+    // isActive=false means the session is pending — no token should have been
+    // issued yet, but this check closes any race window.
+    if (!session.isActive) {
+      res.status(401).json({ error: "session_pending", message: "OTP verification required" });
       return;
     }
 

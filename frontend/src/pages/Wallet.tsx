@@ -21,6 +21,7 @@ import {
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { useNotifications } from '../context/NotificationContext';
+import PinSetupModal from '../components/PinSetupModal';
 import './Wallet.css';
 
 export default function Wallet() {
@@ -47,11 +48,17 @@ export default function Wallet() {
   const [kycLoading, setKycLoading] = useState(false);
   const [kycError, setKycError] = useState<string | null>(null);
 
-  // Two-level verification states from global auth context
+  // F3: PIN gate state — backed by /api/pin/check-balance.
+  // The server enforces I6: SHADOW sessions always return decoy regardless of PIN.
+  // Client only drives display from the 'outcome' field returned by the server.
   const { isUnlocked, setIsUnlocked } = useAuth();
   const [showPinModal, setShowPinModal] = useState(false);
   const [pinInput, setPinInput] = useState('');
   const [pinError, setPinError] = useState<string | null>(null);
+  const [pinLoading, setPinLoading] = useState(false);
+  // PIN setup prompt: shown when pinsConfigured=false after first wallet load
+  const [pinsConfigured, setPinsConfigured] = useState<boolean | null>(null);
+  const [showPinSetup, setShowPinSetup] = useState(false);
 
   // Hook mappings bound to active decoy mode state
   const decoyMode = !isUnlocked;
@@ -109,6 +116,14 @@ export default function Wallet() {
     }
   }, [depStep]);
 
+  // F3: Check if the user has configured PINs yet (for the setup prompt)
+  useEffect(() => {
+    fetch('/api/pin/status')
+      .then((res) => res.ok ? res.json() : { pinsConfigured: false })
+      .then((data) => setPinsConfigured(data.pinsConfigured))
+      .catch(() => setPinsConfigured(false));
+  }, []);
+
   const handleCopy = (text: string) => {
     navigator.clipboard.writeText(text);
     setCopiedText(text);
@@ -117,6 +132,43 @@ export default function Wallet() {
       setCopied(false);
       setCopiedText('');
     }, 2000);
+  };
+
+  // F3: PIN check — calls /api/pin/check-balance.
+  // The server resolves I6 (Shadow bypass) FIRST, then PIN identity.
+  // We only update isUnlocked when outcome === 'normal_master'.
+  const handlePinSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPinError(null);
+    setPinLoading(true);
+    try {
+      const res = await fetch('/api/pin/check-balance', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pin: pinInput }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setPinError(data.message || 'PIN check failed');
+        return;
+      }
+      // I6: outcome drives display, not the PIN value itself
+      if (data.outcome === 'normal_master') {
+        setIsUnlocked(true);
+        setShowPinModal(false);
+        setPinInput('');
+        refetchActiveWallet();
+        refetchActiveTransactions();
+      } else {
+        // shadow_bypass or normal_decoy — silently stay in decoy mode
+        setShowPinModal(false);
+        setPinInput('');
+      }
+    } catch (err: any) {
+      setPinError('Network error. Please try again.');
+    } finally {
+      setPinLoading(false);
+    }
   };
 
   const connectWeb3 = async () => {
@@ -921,7 +973,33 @@ export default function Wallet() {
         </div>
       </div>
 
-      {/* Two-Level Master PIN Verification Challenge Modal */}
+      {/* F3: PIN setup prompt — shown when PINs not yet configured */}
+      {pinsConfigured === false && !showPinSetup && (
+        <div className="wallet__pin-setup-banner card-glass fade-in">
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <Lock size={16} style={{ color: 'var(--accent-primary)', flexShrink: 0 }} />
+            <div>
+              <strong style={{ fontSize: '0.85rem' }}>Set up your Master PIN</strong>
+              <p className="text-muted" style={{ fontSize: '0.76rem', marginTop: 2 }}>
+                Configure a Master PIN to gate access to your authentic balance. A decoy balance is shown to unauthorized viewers.
+              </p>
+            </div>
+          </div>
+          <button className="btn btn-secondary btn-sm" onClick={() => setShowPinSetup(true)}>
+            Set up PINs
+          </button>
+        </div>
+      )}
+
+      {/* F3: PIN setup modal */}
+      {showPinSetup && (
+        <PinSetupModal
+          onSuccess={() => { setShowPinSetup(false); setPinsConfigured(true); }}
+          onCancel={() => setShowPinSetup(false)}
+        />
+      )}
+
+      {/* F3: Master PIN Verification Modal (API-backed, I6 enforced server-side) */}
       {showPinModal && (
         <div className="security-modal-overlay">
           <div className="security-modal-card card-glass fade-in">
@@ -930,28 +1008,14 @@ export default function Wallet() {
             </div>
             <h2>Unlock Authentic Ledger</h2>
             <p className="text-secondary text-center" style={{ fontSize: '0.8rem', lineHeight: 1.4, margin: '8px 0 16px' }}>
-              Access to authentic capital holdings requires verification. Please enter the Master Security PIN.
+              Enter your Master Security PIN to access authentic holdings.
             </p>
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                if (pinInput === '123456') {
-                  setIsUnlocked(true);
-                  setShowPinModal(false);
-                  setPinInput('');
-                  setPinError(null);
-                  refetchActiveWallet();
-                  refetchActiveTransactions();
-                } else {
-                  setPinError('Incorrect Master Security PIN.');
-                }
-              }}
-              className="security-modal-form flex flex-col gap-md"
-            >
+            <form onSubmit={handlePinSubmit} className="security-modal-form flex flex-col gap-md">
               <input
                 type="password"
-                maxLength={6}
-                placeholder="Enter 6-Digit PIN"
+                inputMode="numeric"
+                maxLength={8}
+                placeholder="Enter PIN"
                 value={pinInput}
                 onChange={(e) => setPinInput(e.target.value)}
                 autoFocus
@@ -963,17 +1027,13 @@ export default function Wallet() {
                 </div>
               )}
               <div className="flex gap-sm justify-center">
-                <button type="submit" className="btn btn-primary" style={{ flex: 1 }}>
-                  Unlock Wallet
+                <button type="submit" className="btn btn-primary" style={{ flex: 1 }} disabled={pinLoading}>
+                  {pinLoading ? 'Verifying…' : 'Unlock Wallet'}
                 </button>
                 <button
                   type="button"
                   className="btn btn-secondary"
-                  onClick={() => {
-                    setShowPinModal(false);
-                    setPinInput('');
-                    setPinError(null);
-                  }}
+                  onClick={() => { setShowPinModal(false); setPinInput(''); setPinError(null); }}
                 >
                   Cancel
                 </button>
@@ -982,6 +1042,7 @@ export default function Wallet() {
           </div>
         </div>
       )}
+
     </div>
   );
 }

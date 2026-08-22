@@ -37,3 +37,20 @@ A simulated (non-custodial, synthetic-data) crypto trading platform with an adde
 ## 5. Non-goals for Aug 30
 
 Formal verification (TLA+), IRB-grade human behavioral dataset, resistance to a sophisticated adversary who already knows the system's internals, production-grade key custody. All explicitly deferred — see work plan.
+
+---
+
+## 6. Formal Invariants (I1–I6)
+
+These are the invariants verified by `security-tests.ts` and the `fast-check` property-based suite:
+
+| ID | Invariant | Enforcement |
+|---|---|---|
+| **I1** | A Shadow session can never read `isShadow=false` wallet rows. | `wallet.routes.ts` always filters on `session.state`. |
+| **I2** | A Shadow session can never write `isShadow=false` rows (orders, transactions, holdings). | `trading.routes.ts` and `wallet.routes.ts` propagate `isShadow` from session state to all writes. |
+| **I3** | `session.state` is set exclusively by `runAresPipeline` — never by client input. | Only `auth.routes.ts` (login phase 1) calls `runAresPipeline`. |
+| **I4** | OTP verification does not re-evaluate or override ARES's state decision. | `auth.routes.ts` phase 2 (`/login/verify-otp`) only reads the already-written state; it never calls `runAresPipeline`. |
+| **I5** | Admin routes never expose `Session.state`, `RiskEvent`, `PolicyDecision`, or `BehavioralEvent`. | `admin.routes.ts` uses explicit `select: {}` Prisma allowlists. Implicit selects are banned in that file. |
+| **I6** | `session.state === "SHADOW"` ⟹ PIN identity has no effect on wallet data returned. Shadow sessions always receive decoy wallet regardless of which PIN is entered. | `pin.routes.ts` resolves `isShadow` from `session.state` **first**, before any PIN comparison. The master PIN is only compared when `isShadow === false`. |
+
+**I6 is the critical invariant for F3 (Master PIN gate)**: without it, a Shadow session could brute-force the master PIN and escalate to authentic data, defeating the coercion-resistance guarantee. The enforcement is a single conditional check in `pin.routes.ts:check-balance` that returns early with `outcome = "shadow_bypass"` before any PIN read.

@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: cryptoguard
+    runtime: node
+    plan: free
+    buildCommand: npm run install:all && npm run build:all
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        value: "file:./dev.db"
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRES_IN
+        value: "1h"
+      - key: WEBAUTHN_RP_ID
+        value: "onrender.com"
+      - key: WEBAUTHN_RP_NAME
+        value: "CryptoGuard"
+      - key: WEBAUTHN_ORIGIN
+        value: "https://cryptoguard.onrender.com"

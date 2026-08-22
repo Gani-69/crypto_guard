@@ -5,6 +5,7 @@ interface User {
   email: string;
   displayName: string | null;
   kycStatus?: 'PENDING' | 'VERIFIED' | string;
+  role?: 'USER' | 'ADMIN' | string;
 }
 
 interface Session {
@@ -23,13 +24,24 @@ export interface KycPayload {
   ifsc?: string;
 }
 
+// F2: intermediate state returned after phase 1 of login
+export interface PendingLogin {
+  pendingSessionId: string;
+  message: string;
+}
+
 interface AuthContextType {
   token: string | null;
   user: User | null;
   session: Session | null;
   loading: boolean;
-  login: (email: string, password: string, signal?: any) => Promise<void>;
-  register: (email: string, password: string, displayName?: string) => Promise<void>;
+  // F1: phone added to register()
+  login: (email: string, password: string, signal?: any) => Promise<PendingLogin>;
+  verifyOtp: (pendingSessionId: string, code: string) => Promise<void>;
+  resendOtp: (pendingSessionId: string) => Promise<void>;
+  register: (email: string, password: string, phone: string, displayName?: string) => Promise<void>;
+  // F5: biometric login
+  loginWithWebAuthn: (email: string, manualDuressSignal?: boolean) => Promise<PendingLogin>;
   submitKyc: (kycData: KycPayload) => Promise<void>;
   logout: () => Promise<void>;
   refreshSessionState: () => Promise<string>;
@@ -81,15 +93,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     fetch('/api/session/me')
       .then(async (res) => {
-        if (!res.ok) {
-          throw new Error('Session invalid');
-        }
+        if (!res.ok) throw new Error('Session invalid');
         const data = await res.json();
         setUser(data.user);
         setSession(data.session);
       })
       .catch(() => {
-        // Clear expired/invalid session
         localStorage.removeItem('token');
         setToken(null);
         setUser(null);
@@ -100,7 +109,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
   }, [token]);
 
-  const login = async (email: string, password: string, signal?: any) => {
+  // ── F2: Phase 1 login — returns pendingSessionId, no token yet ────────
+  const login = async (email: string, password: string, signal?: any): Promise<PendingLogin> => {
     const res = await fetch('/api/auth/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -113,17 +123,56 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     const data = await res.json();
+    // Phase 1 returns { pendingSessionId, message } — no token
+    return { pendingSessionId: data.pendingSessionId, message: data.message };
+  };
+
+  // ── F2: Phase 2 OTP verification — issues token on success ───────────
+  const verifyOtp = async (pendingSessionId: string, code: string): Promise<void> => {
+    const res = await fetch('/api/auth/login/verify-otp', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ pendingSessionId, code }),
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      // Propagate attemptsRemaining if present
+      const msg = err.message || (err.error === 'otp_locked'
+        ? 'Too many failed attempts. Please log in again.'
+        : err.attemptsRemaining != null
+          ? `Incorrect code. ${err.attemptsRemaining} attempt${err.attemptsRemaining === 1 ? '' : 's'} remaining.`
+          : 'Incorrect code.');
+      throw new Error(msg);
+    }
+
+    const data = await res.json();
     localStorage.setItem('token', data.token);
     setToken(data.token);
     setUser(data.user);
     setSession(data.session);
   };
 
-  const register = async (email: string, password: string, displayName?: string) => {
+  // ── F2: Resend OTP ────────────────────────────────────────────────────
+  const resendOtp = async (pendingSessionId: string): Promise<void> => {
+    const res = await fetch('/api/auth/login/resend-otp', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ pendingSessionId }),
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.message || 'Failed to resend OTP');
+    }
+  };
+
+  // ── F1: register — phone is now required ─────────────────────────────
+  const register = async (email: string, password: string, phone: string, displayName?: string): Promise<void> => {
     const res = await fetch('/api/auth/register', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password, displayName }),
+      body: JSON.stringify({ email, password, phone, displayName }),
     });
 
     if (!res.ok) {
@@ -132,7 +181,43 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const submitKyc = async (kycData: KycPayload) => {
+  // ── F5: WebAuthn biometric login ──────────────────────────────────────
+  const loginWithWebAuthn = async (email: string, manualDuressSignal?: boolean): Promise<PendingLogin> => {
+    // begin: get authentication options
+    const beginRes = await fetch('/api/webauthn/authenticate/begin', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email }),
+    });
+
+    if (!beginRes.ok) {
+      const err = await beginRes.json().catch(() => ({}));
+      throw new Error(err.message || 'No biometric credentials found for this account.');
+    }
+
+    const { userId, options } = await beginRes.json();
+
+    // Use @simplewebauthn/browser to trigger the platform authenticator
+    const { startAuthentication } = await import('@simplewebauthn/browser');
+    const authResponse = await startAuthentication({ optionsJSON: options });
+
+    // complete: verify assertion on server, get pendingSessionId
+    const completeRes = await fetch('/api/webauthn/authenticate/complete', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId, response: authResponse, manualDuressSignal: Boolean(manualDuressSignal) }),
+    });
+
+    if (!completeRes.ok) {
+      const err = await completeRes.json().catch(() => ({}));
+      throw new Error(err.message || 'Biometric authentication failed.');
+    }
+
+    const data = await completeRes.json();
+    return { pendingSessionId: data.pendingSessionId, message: data.message };
+  };
+
+  const submitKyc = async (kycData: KycPayload): Promise<void> => {
     const res = await fetch('/api/wallet/kyc', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -153,7 +238,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const logout = async () => {
+  const logout = async (): Promise<void> => {
     try {
       await fetch('/api/auth/logout', { method: 'POST' });
     } catch (e) {
@@ -175,7 +260,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return data.session.state;
       }
     } catch (e) {
-      console.error("Failed to refresh session state:", e);
+      console.error('Failed to refresh session state:', e);
     }
     return session?.state ?? 'NORMAL';
   };
@@ -188,7 +273,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         session,
         loading,
         login,
+        verifyOtp,
+        resendOtp,
         register,
+        loginWithWebAuthn,
         submitKyc,
         logout,
         refreshSessionState,

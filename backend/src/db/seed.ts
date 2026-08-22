@@ -63,7 +63,28 @@ const COINS = [
 async function main() {
   const coinCount = await prisma.coin.count();
   if (coinCount > 0) {
-    console.log("[seed] Database already contains coins. Skipping data wipe and seeding...");
+    console.log("[seed] Database already has coins. Upserting user records only...");
+    // F1/F4 upsert: ensure demo user has phone and admin user exists,
+    // without wiping market data or holdings.
+    const defaultPhone = process.env.SEED_TEST_PHONE || "+10000000000";
+    const adminHash = await bcrypt.hash("admin1234", 10);
+    await prisma.user.upsert({
+      where: { email: "admin@cryptoguard.dev" },
+      update: { phone: defaultPhone, role: "ADMIN" },
+      create: {
+        email: "admin@cryptoguard.dev",
+        phone: defaultPhone,
+        passwordHash: adminHash,
+        displayName: "System Admin",
+        role: "ADMIN",
+      },
+    });
+    await prisma.user.updateMany({
+      where: { email: "demo@cryptoguard.dev" },
+      data: { phone: defaultPhone },
+    });
+    console.log("[seed]   → admin@cryptoguard.dev upserted (password: admin1234)");
+    console.log("[seed]   → demo user phone updated");
     return;
   }
 
@@ -73,6 +94,9 @@ async function main() {
   await prisma.order.deleteMany();
   await prisma.holding.deleteMany();
   await prisma.watchlistItem.deleteMany();
+  await prisma.pinCheckLog.deleteMany();      // F3
+  await prisma.adminAccessLog.deleteMany();   // F4
+  await prisma.webAuthnCredential.deleteMany(); // F5
   await prisma.policyDecision.deleteMany();
   await prisma.riskEvent.deleteMany();
   await prisma.behavioralEvent.deleteMany();
@@ -109,8 +133,10 @@ async function main() {
   const user = await prisma.user.create({
     data: {
       email: "demo@cryptoguard.dev",
+      phone: process.env.SEED_TEST_PHONE || "+10000000000",  // F1: placeholder phone for seed data (override with SEED_TEST_PHONE)
       passwordHash,
       displayName: "Demo User",
+      role: "USER",
     },
   });
   console.log(`[seed]   → user ${user.email} (password: demo1234)`);
@@ -219,6 +245,40 @@ async function main() {
     });
   }
   console.log(`[seed]   → ${watchlistCoins.length} watchlist items`);
+
+  // ── Admin user (F4) ──────────────────────────────────────────────────
+  // DEV-ONLY: creates admin@cryptoguard.dev with role=ADMIN.
+  // This account is NOT suitable for production use — it uses a hardcoded
+  // password and has no real authentication hardening beyond the demo flow.
+  console.log("[seed] Creating admin user (dev-only)...");
+  const adminPasswordHash = await bcrypt.hash("admin1234", 10);
+  const adminUser = await prisma.user.create({
+    data: {
+      email: "admin@cryptoguard.dev",
+      phone: process.env.SEED_TEST_PHONE || "+10000000000",
+      passwordHash: adminPasswordHash,
+      displayName: "Admin",
+      role: "ADMIN",  // F4: RBAC role
+    },
+  });
+  // Pre-create wallets for the admin account (same pattern as demo user)
+  await prisma.wallet.create({
+    data: {
+      userId: adminUser.id,
+      isShadow: false,
+      address: `devnet:admin-${uuid().slice(0, 12)}`,
+      chain: "devnet",
+    },
+  });
+  await prisma.wallet.create({
+    data: {
+      userId: adminUser.id,
+      isShadow: true,
+      address: `devnet:admin-shadow-${uuid().slice(0, 8)}`,
+      chain: "devnet",
+    },
+  });
+  console.log(`[seed]   → admin ${adminUser.email} (password: admin1234, role: ADMIN)`);
 
   console.log("[seed] Done ✓");
 }

@@ -9,6 +9,9 @@ import walletRouter from "./api/wallet.routes";
 import tradingRouter from "./api/trading.routes";
 import aresRouter from "./api/ares.routes";
 import sessionRouter from "./api/session.routes";
+import webAuthnRouter from "./api/webauthn.routes";
+import adminRouter from "./api/admin.routes";
+import pinRouter from "./api/pin.routes";
 
 export function createApp(): Express {
   const app = express();
@@ -34,6 +37,9 @@ export function createApp(): Express {
   app.use("/api/wallet", walletRouter);
   app.use("/api/trading", tradingRouter);
   app.use("/api/ares", aresRouter);
+  app.use("/api/webauthn", webAuthnRouter);  // F5
+  app.use("/api/admin", adminRouter);         // F4
+  app.use("/api/pin", pinRouter);             // F3
 
   // Serve static assets from frontend build in production
   const frontendDistPath = path.join(__dirname, "../../frontend/dist");

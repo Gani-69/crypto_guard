@@ -7,6 +7,7 @@ import Watchlist from './pages/Watchlist';
 import Wallet from './pages/Wallet';
 import Trading from './pages/Trading';
 import Security from './pages/Security';
+import AdminDashboard from './pages/AdminDashboard';  // F4
 import { AuthProvider } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { ToastProvider } from './context/ToastContext';
@@ -20,6 +21,8 @@ export default function App() {
           <AuthProvider>
             <BrowserRouter>
               <Routes>
+                {/* F4: /admin is outside Layout so it gets full-width without the main nav */}
+                <Route path="/admin" element={<AdminDashboard />} />
                 <Route element={<Layout />}>
                   <Route path="/" element={<Dashboard />} />
                   <Route path="/markets" element={<Markets />} />
