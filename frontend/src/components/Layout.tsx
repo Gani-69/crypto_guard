@@ -16,6 +16,7 @@ import {
   Sun,
   Moon,
   Bell,
+  User as UserProfileIcon,
 } from 'lucide-react';
 import './Layout.css';
 import { useAuth } from '../context/AuthContext';
@@ -25,6 +26,7 @@ import './Notifications.css';
 import { useKeystrokeBiometrics } from '../hooks/useKeystrokeBiometrics';
 import Login from '../pages/Login';
 import Footer from './Footer';
+import ProfileModal from './ProfileModal';
 
 const NAV_ITEMS = [
   { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
@@ -40,6 +42,7 @@ export default function Layout() {
   const { theme, toggleTheme } = useTheme();
   const { notifications, unreadCount, markAllRead, clearAll } = useNotifications();
   const [notifOpen, setNotifOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
   
   // Activate keystroke telemetry monitoring
   useKeystrokeBiometrics();
@@ -260,10 +263,16 @@ export default function Layout() {
               </NavLink>
             )}
             
-            {/* Avatar */}
-            <div className="navbar__avatar" title={`Logged in as ${user?.displayName || user?.email}`}>
+            {/* Avatar Button */}
+            <button
+              type="button"
+              className="navbar__avatar navbar__avatar--clickable"
+              onClick={() => setProfileOpen(true)}
+              title={`View registered details & edit profile (${user?.displayName || user?.email})`}
+              aria-label="View user profile"
+            >
               <span>{(user?.displayName || user?.email || 'U')[0].toUpperCase()}</span>
-            </div>
+            </button>
 
             {/* Mobile Hamburger menu icon */}
             <button className="navbar__hamburger" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
@@ -290,6 +299,17 @@ export default function Layout() {
                   <span>{item.label}</span>
                 </NavLink>
               ))}
+              <button
+                type="button"
+                className="navbar__mobile-link"
+                onClick={() => {
+                  setProfileOpen(true);
+                  setMobileMenuOpen(false);
+                }}
+              >
+                <UserProfileIcon size={18} />
+                <span>My Profile</span>
+              </button>
               <button className="navbar__mobile-logout" onClick={() => { logout(); setMobileMenuOpen(false); }}>
                 <LogOut size={18} />
                 <span>Logout</span>
@@ -306,6 +326,9 @@ export default function Layout() {
 
       {/* ── Footer ── */}
       <Footer />
+
+      {/* ── User Profile & Identity Modal ── */}
+      <ProfileModal isOpen={profileOpen} onClose={() => setProfileOpen(false)} />
 
       {/* Step Up Verification Modal */}
       {(sessionState === 'STEP_UP' || sessionState === 'RESTRICTED') && (

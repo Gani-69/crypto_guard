@@ -1,11 +1,40 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
 
-interface User {
+export interface User {
   id: string;
+  username?: string | null;
   email: string;
+  phone?: string;
   displayName: string | null;
   kycStatus?: 'PENDING' | 'VERIFIED' | string;
   role?: 'USER' | 'ADMIN' | string;
+}
+
+export interface UserProfile {
+  id: string;
+  username: string;
+  displayName: string | null;
+  email: string;
+  phone: string;
+  role: string;
+  kycStatus: 'PENDING' | 'VERIFIED' | string;
+  kycVerifiedAt?: string | null;
+  kycData?: {
+    fullName?: string;
+    panNumber?: string;
+    aadhaarLast4?: string;
+    paymentMethod?: string;
+    upiId?: string;
+    bankAccount?: string;
+    ifsc?: string;
+    verifiedAt?: string;
+  } | null;
+  walletAddress?: string;
+  hasPin?: boolean;
+  webAuthnCount?: number;
+  activeSessionsCount?: number;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 interface Session {
@@ -43,6 +72,8 @@ interface AuthContextType {
   // F5: biometric login
   loginWithWebAuthn: (email: string, manualDuressSignal?: boolean) => Promise<PendingLogin>;
   submitKyc: (kycData: KycPayload) => Promise<void>;
+  fetchProfile: () => Promise<UserProfile>;
+  updateProfile: (data: { displayName?: string; username?: string }) => Promise<User>;
   logout: () => Promise<void>;
   refreshSessionState: () => Promise<string>;
   isUnlocked: boolean;
@@ -238,6 +269,51 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const fetchProfile = async (): Promise<UserProfile> => {
+    const res = await fetch('/api/user/profile');
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.message || 'Failed to load user profile');
+    }
+    const data = await res.json();
+    if (data.profile) {
+      setUser((prev) => ({
+        ...(prev ?? {}),
+        id: data.profile.id,
+        username: data.profile.username,
+        displayName: data.profile.displayName,
+        email: data.profile.email,
+        phone: data.profile.phone,
+        role: data.profile.role,
+        kycStatus: data.profile.kycStatus,
+      }));
+    }
+    return data.profile;
+  };
+
+  const updateProfile = async (updateData: { displayName?: string; username?: string }): Promise<User> => {
+    const res = await fetch('/api/user/profile', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(updateData),
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.message || 'Failed to update profile');
+    }
+
+    const data = await res.json();
+    if (data.user) {
+      setUser((prev) => ({
+        ...(prev ?? {}),
+        ...data.user,
+      }));
+      return data.user;
+    }
+    throw new Error('Invalid response from server');
+  };
+
   const logout = async (): Promise<void> => {
     try {
       await fetch('/api/auth/logout', { method: 'POST' });
@@ -278,6 +354,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         register,
         loginWithWebAuthn,
         submitKyc,
+        fetchProfile,
+        updateProfile,
         logout,
         refreshSessionState,
         isUnlocked,

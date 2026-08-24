@@ -37,6 +37,7 @@ datasource db {
 
 model User {
   id            String   @id @default(uuid())
+  username      String?  @unique
   email         String   @unique
   // F1: phone required at registration. @default("") is a migration sentinel for
   //     existing dev rows; auth.routes.ts rejects empty values at the application layer.

@@ -12,6 +12,7 @@ import sessionRouter from "./api/session.routes";
 import webAuthnRouter from "./api/webauthn.routes";
 import adminRouter from "./api/admin.routes";
 import pinRouter from "./api/pin.routes";
+import userRouter from "./api/user.routes";
 
 export function createApp(): Express {
   const app = express();
@@ -33,6 +34,7 @@ export function createApp(): Express {
 
   app.use("/api/auth", authRouter);
   app.use("/api/session", sessionRouter);
+  app.use("/api/user", userRouter);
   app.use("/api/market", marketRouter);
   app.use("/api/wallet", walletRouter);
   app.use("/api/trading", tradingRouter);
