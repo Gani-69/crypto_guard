@@ -124,16 +124,57 @@ export async function resendOtp(pendingSessionId: string): Promise<ResendResult>
   return { ok: true, code };
 }
 
-// ── Send OTP via email (Resend API or SMTP) ──────────────────────────
+// ── Send OTP via email (Nodemailer SMTP or Resend) ────────────────────
 
 export async function sendOtpEmail(email: string, code: string): Promise<void> {
   console.log(`\n======================================================\n🔐 [OTP CODE] User: ${email} -> CODE: ${code}\n======================================================\n`);
 
-  // 1. Try Resend API if configured
+  // 1. Prioritize real SMTP (Nodemailer via Gmail / custom host) to send to ANY email
+  if (env.SMTP_HOST && env.SMTP_USER && env.SMTP_PASS) {
+    try {
+      const nodemailer = await import("nodemailer");
+      const cleanPass = env.SMTP_PASS.replace(/\s+/g, "");
+      const transporter = nodemailer.default.createTransport({
+        host: env.SMTP_HOST,
+        port: env.SMTP_PORT,
+        secure: env.SMTP_PORT === 465,
+        auth: {
+          user: env.SMTP_USER,
+          pass: cleanPass,
+        },
+      });
+
+      await transporter.sendMail({
+        from: env.SMTP_FROM || `"CryptoGuard" <${env.SMTP_USER}>`,
+        to: email,
+        subject: `CryptoGuard Verification Code: ${code}`,
+        text: `Your CryptoGuard one-time verification code is: ${code}\n\nThis code expires in 5 minutes. If you did not request this login, please secure your account immediately.`,
+        html: `
+          <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 500px; margin: 0 auto; padding: 28px; border-radius: 12px; background: #0b0f19; color: #ffffff; border: 1px solid #1e293b;">
+            <div style="text-align: center; margin-bottom: 24px;">
+              <h1 style="color: #06b6d4; font-size: 24px; margin: 0; font-weight: 700; letter-spacing: -0.5px;">🛡️ CryptoGuard Security</h1>
+              <p style="color: #94a3b8; font-size: 14px; margin-top: 6px;">Adaptive Risk & Coercion-Resistant Protection</p>
+            </div>
+            <p style="font-size: 15px; color: #e2e8f0; line-height: 1.5;">Your one-time authentication code for <strong>${email}</strong> is:</p>
+            <div style="font-size: 36px; font-weight: 800; letter-spacing: 8px; padding: 18px 24px; background: #162032; border: 1px solid #06b6d4; border-radius: 8px; text-align: center; color: #38bdf8; margin: 24px 0; font-family: monospace;">
+              ${code}
+            </div>
+            <p style="color: #94a3b8; font-size: 13px; line-height: 1.5;">⏱️ This code <strong>expires in 5 minutes</strong> and can only be used once.</p>
+            <p style="color: #64748b; font-size: 12px; margin-top: 20px; border-top: 1px solid #1e293b; padding-top: 16px;">If you did not request this authentication code, someone may be attempting to access your account. No actions have been taken on your portfolio.</p>
+          </div>
+        `,
+      });
+
+      console.log(`[Nodemailer] ✅ OTP email successfully delivered to ${email}`);
+      return;
+    } catch (err) {
+      console.error("[Nodemailer SMTP delivery failed]:", err);
+    }
+  }
+
+  // 2. Resend API fallback if configured
   if (env.RESEND_API_KEY) {
     try {
-      // In Resend free/test tier (onboarding@resend.dev), Resend ONLY permits sending to the account owner's email.
-      // If OTP_TEST_OVERRIDE_EMAIL is configured, route there so real emails land in your inbox.
       const targetEmail = env.OTP_TEST_OVERRIDE_EMAIL || email;
       const isOverridden = targetEmail.toLowerCase() !== email.toLowerCase();
 
@@ -169,33 +210,7 @@ export async function sendOtpEmail(email: string, code: string): Promise<void> {
         console.error("[Resend error]:", resData);
       }
     } catch (err) {
-      console.error("[Resend failed, falling back to SMTP]:", err);
-    }
-  }
-
-  // 2. Fallback to SMTP / Ethereal
-  if (env.SMTP_HOST) {
-    try {
-      const nodemailer = await import("nodemailer");
-      const transporter = nodemailer.default.createTransport({
-        host: env.SMTP_HOST,
-        port: env.SMTP_PORT,
-        secure: env.SMTP_PORT === 465,
-        auth: {
-          user: env.SMTP_USER,
-          pass: env.SMTP_PASS,
-        },
-      });
-      await transporter.sendMail({
-        from: env.SMTP_FROM || `"CryptoGuard" <noreply@cryptoguard.dev>`,
-        to: email,
-        subject: "Your CryptoGuard login code",
-        text: `Your one-time login code is: ${code}\n\nIt expires in 5 minutes. If you didn't request this, ignore this email.`,
-        html: `<p>Your one-time login code is: <strong>${code}</strong></p><p>It expires in 5 minutes.</p>`,
-      });
-      return;
-    } catch (err) {
-      console.error("[OTP] SMTP delivery failed:", err);
+      console.error("[Resend failed]:", err);
     }
   }
 
