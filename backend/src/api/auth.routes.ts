@@ -7,7 +7,7 @@ import { prisma } from "../db/prisma";
 import { env } from "../config/env";
 import { hashToken, requireAuth, AuthenticatedRequest } from "../middleware/auth.middleware";
 import { runAresPipeline } from "../services/ares.service";
-import { generateOtp, verifyOtp, resendOtp, sendOtpNotification } from "../services/otp.service";
+import { generateOtp, verifyOtp, resendOtp, sendOtpNotification, sendWelcomeEmail } from "../services/otp.service";
 
 const router = Router();
 
@@ -84,6 +84,11 @@ router.post("/register", async (req: Request, res: Response) => {
         address: `devnet:shadow-${uuid().slice(0, 12)}`,
         chain: "devnet",
       },
+    });
+
+    // Send automated welcome email via Nodemailer
+    sendWelcomeEmail(user.email, user.displayName).catch((err) => {
+      console.error("[auth] sendWelcomeEmail error:", err);
     });
 
     res.status(201).json({

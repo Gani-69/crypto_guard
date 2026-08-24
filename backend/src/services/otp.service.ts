@@ -266,6 +266,51 @@ export async function sendOtpSms(phone: string, code: string): Promise<void> {
   }
 }
 
+// ── Send Welcome Email on Registration ───────────────────────────────
+export async function sendWelcomeEmail(email: string, displayName?: string | null): Promise<void> {
+  if (env.SMTP_HOST && env.SMTP_USER && env.SMTP_PASS) {
+    try {
+      const nodemailer = await import("nodemailer");
+      const cleanPass = env.SMTP_PASS.replace(/\s+/g, "");
+      const transporter = nodemailer.default.createTransport({
+        host: env.SMTP_HOST,
+        port: env.SMTP_PORT,
+        secure: env.SMTP_PORT === 465,
+        auth: {
+          user: env.SMTP_USER,
+          pass: cleanPass,
+        },
+      });
+
+      await transporter.sendMail({
+        from: env.SMTP_FROM || `"CryptoGuard" <${env.SMTP_USER}>`,
+        to: email,
+        subject: "🎉 Welcome to CryptoGuard!",
+        text: `Hello ${displayName || email},\n\nWelcome to CryptoGuard! Your account has been successfully registered.\n\nWhenever you sign in, an automated 6-digit one-time password (OTP) will be delivered to this email address to keep your portfolio and wallet secure.\n\nStay safe,\nCryptoGuard Security Team`,
+        html: `
+          <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 500px; margin: 0 auto; padding: 28px; border-radius: 12px; background: #0b0f19; color: #ffffff; border: 1px solid #1e293b;">
+            <div style="text-align: center; margin-bottom: 24px;">
+              <h1 style="color: #06b6d4; font-size: 24px; margin: 0; font-weight: 700; letter-spacing: -0.5px;">🛡️ Welcome to CryptoGuard</h1>
+              <p style="color: #94a3b8; font-size: 14px; margin-top: 6px;">Next-Gen Coercion-Resistant Crypto Platform</p>
+            </div>
+            <p style="font-size: 15px; color: #e2e8f0; line-height: 1.5;">Hello <strong>${displayName || email}</strong>,</p>
+            <p style="font-size: 14px; color: #94a3b8; line-height: 1.6;">Your account has been successfully registered. Whenever you sign in, a real-time 6-digit authentication code (OTP) will be sent to this email address to protect your simulated holdings and trades.</p>
+            <div style="padding: 14px 18px; background: #162032; border-radius: 8px; border-left: 4px solid #06b6d4; margin: 20px 0;">
+              <p style="color: #38bdf8; margin: 0; font-size: 13px; font-weight: 600;">🔒 Multi-Factor Protection Active</p>
+              <p style="color: #94a3b8; margin: 4px 0 0 0; font-size: 12px;">Adaptive Risk Estimation System (ARES) & Dual-PIN security enabled.</p>
+            </div>
+            <p style="color: #64748b; font-size: 12px; margin-top: 20px; border-top: 1px solid #1e293b; padding-top: 16px;">CryptoGuard Research Demo • Non-custodial</p>
+          </div>
+        `,
+      });
+
+      console.log(`[Nodemailer] ✅ Welcome email sent to ${email}`);
+    } catch (err) {
+      console.error("[Nodemailer] Failed to send welcome email:", err);
+    }
+  }
+}
+
 // ── Send OTP via all available channels (Email + SMS) ─────────────────
 export async function sendOtpNotification(
   user: { email: string; phone?: string | null },
