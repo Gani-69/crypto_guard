@@ -127,13 +127,16 @@ export async function resendOtp(pendingSessionId: string): Promise<ResendResult>
 // ── Send OTP via email (Resend API or SMTP) ──────────────────────────
 
 export async function sendOtpEmail(email: string, code: string): Promise<void> {
+  console.log(`\n======================================================\n🔐 [OTP CODE] User: ${email} -> CODE: ${code}\n======================================================\n`);
+
   // 1. Try Resend API if configured
   if (env.RESEND_API_KEY) {
     try {
-      // In Resend test tier without custom domain, send to registered owner or specified email if override is configured
-      const targetEmail = (email.endsWith("@cryptoguard.dev") && env.OTP_TEST_OVERRIDE_EMAIL)
-        ? env.OTP_TEST_OVERRIDE_EMAIL
-        : email;
+      // In Resend free/test tier (onboarding@resend.dev), Resend ONLY permits sending to the account owner's email.
+      // If OTP_TEST_OVERRIDE_EMAIL is configured, route there so real emails land in your inbox.
+      const targetEmail = env.OTP_TEST_OVERRIDE_EMAIL || email;
+      const isOverridden = targetEmail.toLowerCase() !== email.toLowerCase();
+
       const response = await fetch("https://api.resend.com/emails", {
         method: "POST",
         headers: {
@@ -143,15 +146,16 @@ export async function sendOtpEmail(email: string, code: string): Promise<void> {
         body: JSON.stringify({
           from: "CryptoGuard <onboarding@resend.dev>",
           to: [targetEmail],
-          subject: `CryptoGuard Verification Code: ${code}`,
+          subject: `CryptoGuard Verification Code: ${code}${isOverridden ? ` (for ${email})` : ""}`,
           html: `
             <div style="font-family: Arial, sans-serif; max-width: 500px; padding: 20px; border-radius: 8px; background: #0b0f19; color: #ffffff;">
               <h2 style="color: #06b6d4; margin-top: 0;">CryptoGuard Security</h2>
-              <p>Your one-time authentication code is:</p>
+              <p>Your one-time authentication code for <strong>${email}</strong> is:</p>
               <div style="font-size: 32px; font-weight: bold; letter-spacing: 6px; padding: 16px; background: #162032; border-radius: 6px; text-align: center; color: #38bdf8; margin: 20px 0;">
                 ${code}
               </div>
               <p style="color: #94a3b8; font-size: 14px;">This code expires in 5 minutes. If you did not request this login, please secure your account immediately.</p>
+              ${isOverridden ? `<p style="color: #64748b; font-size: 12px; border-top: 1px solid #1e293b; padding-top: 10px; margin-top: 15px;">[Dev Sandbox Notice] Delivered to registered owner ${targetEmail} for test account ${email}.</p>` : ""}
             </div>
           `,
         }),
@@ -159,7 +163,7 @@ export async function sendOtpEmail(email: string, code: string): Promise<void> {
 
       const resData = (await response.json()) as any;
       if (response.ok) {
-        console.log(`[Resend] OTP email delivered to ${targetEmail} (ID: ${resData.id})`);
+        console.log(`[Resend] OTP email delivered to ${targetEmail} (for ${email}) (ID: ${resData.id})`);
         return;
       } else {
         console.error("[Resend error]:", resData);

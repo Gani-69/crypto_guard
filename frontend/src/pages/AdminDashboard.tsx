@@ -80,6 +80,102 @@ export default function AdminDashboard() {
   const [logs, setLogs] = useState<LogRow[]>([]);
   const [logsLoading, setLogsLoading] = useState(false);
 
+  // Hooks called unconditionally at top level
+  const handleSendOtp = useCallback(async () => {
+    setVerifyError(null);
+    try {
+      const res = await fetch('/api/admin/send-verify-otp', { method: 'POST' });
+      if (res.ok) setOtpSent(true);
+    } catch {
+      // Silently fail — user can retry via the resend button
+    }
+  }, []);
+
+  const fetchUsers = useCallback(async (p = 1) => {
+    setListLoading(true);
+    try {
+      const res = await fetch(`/api/admin/users?page=${p}&limit=15`);
+      if (!res.ok) {
+        if (res.status === 403) { setAdminVerified(false); setView('verify'); }
+        return;
+      }
+      const data = await res.json();
+      setUsers(data.users);
+      setTotal(data.total);
+      setPage(p);
+    } catch (e) {
+      console.error('Failed to fetch users', e);
+    } finally {
+      setListLoading(false);
+    }
+  }, []);
+
+  const fetchDetail = useCallback(async (userId: string) => {
+    setDetailLoading(true);
+    try {
+      const res = await fetch(`/api/admin/users/${userId}`);
+      if (!res.ok) {
+        if (res.status === 403) { setAdminVerified(false); setView('verify'); }
+        return;
+      }
+      const data = await res.json();
+      setUserDetail(data.user);
+    } catch (e) {
+      console.error('Failed to fetch user detail', e);
+    } finally {
+      setDetailLoading(false);
+    }
+  }, []);
+
+  const fetchLogs = useCallback(async () => {
+    setLogsLoading(true);
+    try {
+      const res = await fetch('/api/admin/logs?limit=50');
+      if (!res.ok) {
+        if (res.status === 403) { setAdminVerified(false); setView('verify'); }
+        return;
+      }
+      const data = await res.json();
+      setLogs(data.logs);
+    } catch (e) {
+      console.error('Failed to fetch logs', e);
+    } finally {
+      setLogsLoading(false);
+    }
+  }, []);
+
+  // Send OTP on mount for the admin re-verify flow
+  useEffect(() => {
+    if (user?.role === 'ADMIN' && view === 'verify' && !adminVerified) {
+      handleSendOtp();
+    }
+  }, [user?.role, view, adminVerified, handleSendOtp]);
+
+  const handleVerify = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setVerifyError(null);
+    setVerifyLoading(true);
+    try {
+      const res = await fetch('/api/admin/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: otpCode }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setVerifyError(data.message || 'Verification failed');
+        return;
+      }
+      setAdminVerified(true);
+      setView('list');
+      fetchUsers(1);
+    } catch {
+      setVerifyError('Network error. Please try again.');
+    } finally {
+      setVerifyLoading(false);
+    }
+  };
+
   // Guard: not loaded yet
   if (!user) {
     return (
@@ -108,103 +204,6 @@ export default function AdminDashboard() {
       </div>
     );
   }
-
-  // Send OTP on mount for the admin re-verify flow
-  useEffect(() => {
-    if (view === 'verify' && !adminVerified) {
-      handleSendOtp();
-    }
-  }, []);
-
-  const handleSendOtp = async () => {
-    setVerifyError(null);
-    try {
-      const res = await fetch('/api/admin/send-verify-otp', { method: 'POST' });
-      if (res.ok) setOtpSent(true);
-    } catch (e) {
-      // Silently fail — user can retry via the resend button
-    }
-  };
-
-  const handleVerify = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setVerifyError(null);
-    setVerifyLoading(true);
-    try {
-      const res = await fetch('/api/admin/verify', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code: otpCode }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        setVerifyError(data.message || 'Verification failed');
-        return;
-      }
-      setAdminVerified(true);
-      setView('list');
-      fetchUsers(1);
-    } catch (err) {
-      setVerifyError('Network error. Please try again.');
-    } finally {
-      setVerifyLoading(false);
-    }
-  };
-
-  const fetchUsers = useCallback(async (p = 1) => {
-    setListLoading(true);
-    try {
-      const res = await fetch(`/api/admin/users?page=${p}&limit=15`);
-      if (!res.ok) {
-        if (res.status === 403) { setAdminVerified(false); setView('verify'); }
-        return;
-      }
-      const data = await res.json();
-      setUsers(data.users);
-      setTotal(data.total);
-      setPage(p);
-    } catch (e) {
-      console.error('Failed to fetch users', e);
-    } finally {
-      setListLoading(false);
-    }
-  }, []);
-
-  const fetchDetail = async (userId: string) => {
-    setDetailLoading(true);
-    try {
-      const res = await fetch(`/api/admin/users/${userId}`);
-      if (!res.ok) {
-        if (res.status === 403) { setAdminVerified(false); setView('verify'); }
-        return;
-      }
-      const data = await res.json();
-      setUserDetail(data.user);
-    } catch (e) {
-      console.error('Failed to fetch user detail', e);
-    } finally {
-      setDetailLoading(false);
-    }
-  };
-
-  const fetchLogs = useCallback(async () => {
-    setLogsLoading(true);
-    try {
-      const res = await fetch('/api/admin/logs?limit=50');
-      if (!res.ok) {
-        if (res.status === 403) { setAdminVerified(false); setView('verify'); }
-        return;
-      }
-      const data = await res.json();
-      setLogs(data.logs);
-    } catch (e) {
-      console.error('Failed to fetch logs', e);
-    } finally {
-      setLogsLoading(false);
-    }
-  }, []);
-
-  if (!user || user.role !== 'ADMIN') return null;
 
   const fmt = (iso: string) => new Date(iso).toLocaleString();
 

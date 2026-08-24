@@ -2,7 +2,7 @@
 
 - **Tooling Used**: `fast-check` property-based testing
 - **Test Executions**: 1,50,000 paths (length 1 to 100 steps)
-- **Runtime**: 0.50 seconds
+- **Runtime**: 0.21 seconds
 - **Status**: **PASS (Zero Violations)**
 - **Invariants Verified**:
   1. **I1_NoShadowReadingAuthentic**: When session state is `SHADOW`, the active wallet view is completely isolated to simulated decoy tables.
